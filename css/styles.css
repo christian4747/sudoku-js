@@ -2,9 +2,10 @@
     margin: 0;
     padding: 0;
     background-color: darkgray;
+    box-sizing: border-box;
 }
 
-.flex-container, .flex-container-col, .item {
+.flex-container, .flex-container-col, .sudoku-cell {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -34,16 +35,20 @@
     border: solid 1px black;
 }
 
-.item {
+.sudoku-cell {
     display: flex;
     border: solid 1px black;
     width: 50px;
     height: 50px;
     text-align: center;
     transition: .1s;
+    z-index: 2;
 }
 
-.item:hover {
-    background-color: lightblue;
+.sudoku-cell:hover {
     cursor: pointer;
+}
+
+.selected-cell {
+    background-color: rgba(255, 0, 0, 1);
 }
