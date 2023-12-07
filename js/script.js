@@ -59,7 +59,7 @@ const moveInDirection = (key) => {
 const checkRow = (x) => {
     let current = [];
     for (let i = 0; i < 9; i++) {
-        let check = sudokuGrid[x][i].innerHTML;
+        let check = sudokuGrid[x][i].textContent;
         if (current.includes(check)) {
             return false;
         }
@@ -73,7 +73,7 @@ const checkRow = (x) => {
 const checkCol = (y) => {
     let current = [];
     for (let i = 0; i < 9; i++) {
-        let check = sudokuGrid[i][y].innerHTML;
+        let check = sudokuGrid[i][y].textContent;
         if (current.includes(check)) {
             return false;
         }
@@ -90,7 +90,7 @@ const checkGrid = (x, y) => {
 
     for (let i = centerPoint[0] - 1; i < centerPoint[0] + 1; i++) {
         for (let j = centerPoint[1] - 1; j < centerPoint[1] + 1; j++) {
-            let check = sudokuGrid[i][j].innerHTML;
+            let check = sudokuGrid[i][j].textContent;
             if (current.includes(check)) {
                 return false;
             }
@@ -103,12 +103,12 @@ const checkGrid = (x, y) => {
 }
 
 const closestGrid = (x, y) => {
-    let least;
-    let centerPoint;
+    if (gridCenters.includes([x, y])) {
+        return [x, y];
+    }
+
+    let least, centerPoint;
     for (let gridCenter of gridCenters) {
-        if (x == gridCenter[0] && y == gridCenter[1]) {
-            return gridCenter;
-        }
         let currentDist = dist(x, y, gridCenter[0], gridCenter[1]);
         if (!least) {
             least = currentDist;
@@ -137,7 +137,7 @@ const checkGame = () => {
 const checkSolution = () => {
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
-            if (sudokuGrid[i][j].innerHTML == '') {
+            if (sudokuGrid[i][j].textContent == '') {
                 return false;
             }
         }
@@ -148,7 +148,7 @@ const checkSolution = () => {
 const findEmptySpace = (grid) => {
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
-            if (grid[i][j].innerHTML == '') {
+            if (grid[i][j].textContent == '') {
                 return [i, j];
             }
         }
@@ -171,11 +171,11 @@ const backTrackMe = (grid) => {
     let candidates = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     while (candidates.length > 0) {
         let idx = Math.floor(Math.random() * candidates.length);
-        gridCopy[location[0]][location[1]].innerHTML = candidates[idx];
+        gridCopy[location[0]][location[1]].textContent = candidates[idx];
         if (checkGame() && backTrackMe(gridCopy)) {
             return true;
         }
-        gridCopy[location[0]][location[1]].innerHTML = '';
+        gridCopy[location[0]][location[1]].textContent = '';
         candidates.splice(idx, 1);
     }
     return false;
@@ -184,7 +184,7 @@ const backTrackMe = (grid) => {
 const clearBoard = () => {
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
-            sudokuGrid[i][j].innerHTML = '';
+            sudokuGrid[i][j].textContent = '';
         }
     }
 }
@@ -211,9 +211,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (selectedCell.length == 0) {
                 return;
             } else if (e.key == 'Backspace') {
-                selectedCell.innerHTML = '';
+                selectedCell.textContent = '';
             } else {
-                selectedCell.innerHTML = e.key;
+                selectedCell.textContent = e.key;
             }
         } else if (movementKeys.includes(e.key)) {
             if (selectedCell.length == 0) {
