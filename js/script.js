@@ -8,8 +8,38 @@ const gridCenters = [
 let sudokuGrid = [];
 let selectedCell = '';
 
-const initializeGrid = () => {
+const initializeGrid = (hintNum) => {
+    clearBoard();
+    backTrackMe(sudokuGrid);
 
+    let randomArray = [];
+    for (let i = 0; i < 81; i++) {
+        randomArray.push(i);
+    }
+    fisherYatesShuffe(randomArray);
+
+    let positions = [];
+    for (let i = 0; i < 81 - hintNum; i++) {
+        positions.push(randomArray.pop());
+    }
+
+    for (let pos of positions) {
+        let to2d = positionConversion(pos, 9);
+        sudokuGrid[to2d[0]][to2d[1]].textContent = '';
+    }
+}
+
+const fisherYatesShuffe = (arr) => {
+    for (let i = arr.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (arr.length - 1));
+        let temp = i;
+        arr[i] = j;
+        arr[j] = temp;
+    }
+}
+
+const positionConversion = (num, len) => {
+    return [Math.floor(num / len), num % len];
 }
 
 const validPosition = (x, y) => {
@@ -34,6 +64,7 @@ const clickCell = (e) => {
     }
     selectedCell = e.target || e;
     selectedCell.classList.toggle('selected-cell');
+    console.log(selectedCell.x, selectedCell.y)
 }
 
 const moveInDirection = (key) => {
@@ -88,8 +119,8 @@ const checkGrid = (x, y) => {
     let centerPoint = closestGrid(x, y);
     let current = [];
 
-    for (let i = centerPoint[0] - 1; i < centerPoint[0] + 1; i++) {
-        for (let j = centerPoint[1] - 1; j < centerPoint[1] + 1; j++) {
+    for (let i = centerPoint[0] - 1; i < centerPoint[0] + 2; i++) {
+        for (let j = centerPoint[1] - 1; j < centerPoint[1] + 2; j++) {
             let check = sudokuGrid[i][j].textContent;
             if (current.includes(check)) {
                 return false;
@@ -103,12 +134,11 @@ const checkGrid = (x, y) => {
 }
 
 const closestGrid = (x, y) => {
-    if (gridCenters.includes([x, y])) {
-        return [x, y];
-    }
-
     let least, centerPoint;
     for (let gridCenter of gridCenters) {
+        if (x == gridCenter[0] && y == gridCenter[1]) {
+            return gridCenter;
+        }
         let currentDist = dist(x, y, gridCenter[0], gridCenter[1]);
         if (!least) {
             least = currentDist;
@@ -264,5 +294,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelector('#clear-board-button').addEventListener("click", (e) => {
         clearBoard();
+    });
+
+    document.querySelector('#new-game-button').addEventListener("click", (e) => {
+        initializeGrid(20);
     });
 });
