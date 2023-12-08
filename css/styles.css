@@ -38,22 +38,21 @@
 .side-container {
     width: 200px;
     height: 200px;
-    /* border: 1px solid black; */
 }
 
 .container {
     display: grid;
-    /* border: solid 1px black; */
 }
 
 .sudoku-cell {
     display: flex;
-    /* border: solid 1px black; */
     width: 50px;
     height: 50px;
     text-align: center;
     transition: .1s;
     border-right: 1px solid black;
+    color: darkblue;
+    font-weight: bold;
 }
 
 .sudoku-cell:nth-child(3), .sudoku-cell:nth-child(6) {
@@ -67,4 +66,13 @@
 
 .selected-cell {
     background-color: lightcoral;
+}
+
+.modifiable {
+    color: black;
+    font-weight: normal;
+}
+
+.hide {
+    display: none;
 }

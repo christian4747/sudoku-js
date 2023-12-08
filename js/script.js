@@ -7,6 +7,9 @@ const gridCenters = [
 ];
 let sudokuGrid = [];
 let selectedCell = '';
+let secondsPassed = 0;
+let timerInterval;
+let paused = false;
 
 const initializeGrid = (hintNum) => {
     clearBoard();
@@ -15,6 +18,8 @@ const initializeGrid = (hintNum) => {
     let randomArray = [];
     for (let i = 0; i < 81; i++) {
         randomArray.push(i);
+        let to2d = positionConversion(i, 9);
+        sudokuGrid[to2d[0]][to2d[1]].unmodifiable = true;
     }
     fisherYatesShuffe(randomArray);
 
@@ -26,14 +31,16 @@ const initializeGrid = (hintNum) => {
     for (let pos of positions) {
         let to2d = positionConversion(pos, 9);
         sudokuGrid[to2d[0]][to2d[1]].textContent = '';
+        sudokuGrid[to2d[0]][to2d[1]].unmodifiable = false;
+        sudokuGrid[to2d[0]][to2d[1]].classList.add('modifiable');
     }
 }
 
 const fisherYatesShuffe = (arr) => {
     for (let i = arr.length - 1; i > 0; i--) {
         let j = Math.floor(Math.random() * (arr.length - 1));
-        let temp = i;
-        arr[i] = j;
+        let temp = arr[i];
+        arr[i] = arr[j];
         arr[j] = temp;
     }
 }
@@ -64,7 +71,6 @@ const clickCell = (e) => {
     }
     selectedCell = e.target || e;
     selectedCell.classList.toggle('selected-cell');
-    console.log(selectedCell.x, selectedCell.y)
 }
 
 const moveInDirection = (key) => {
@@ -91,7 +97,7 @@ const checkRow = (x) => {
     let current = [];
     for (let i = 0; i < 9; i++) {
         let check = sudokuGrid[x][i].textContent;
-        if (current.includes(check)) {
+        if (current.includes(check) || check.length > 1) {
             return false;
         }
         if (check != '') {
@@ -105,7 +111,7 @@ const checkCol = (y) => {
     let current = [];
     for (let i = 0; i < 9; i++) {
         let check = sudokuGrid[i][y].textContent;
-        if (current.includes(check)) {
+        if (current.includes(check) || check.length > 1) {
             return false;
         }
         if (check != '') {
@@ -122,7 +128,7 @@ const checkGrid = (x, y) => {
     for (let i = centerPoint[0] - 1; i < centerPoint[0] + 2; i++) {
         for (let j = centerPoint[1] - 1; j < centerPoint[1] + 2; j++) {
             let check = sudokuGrid[i][j].textContent;
-            if (current.includes(check)) {
+            if (current.includes(check) || check.length > 1) {
                 return false;
             }
             if (check != '') {
@@ -212,14 +218,54 @@ const backTrackMe = (grid) => {
 }
 
 const clearBoard = () => {
+    clearInterval(timerInterval);
+    secondsPassed = 0;
+    startTimer();
+
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             sudokuGrid[i][j].textContent = '';
+            sudokuGrid[i][j].textContent.unmodifiable = false;
+            sudokuGrid[i][j].classList.remove('modifiable');
         }
     }
 }
 
+const secondsToTimeString = (seconds) => {
+    return seconds % 60 < 10 ? `${Math.floor(seconds / 60)}:0${seconds % 60}` : `${Math.floor(seconds / 60)}:${seconds % 60}`
+}
+
+const startTimer = () => {
+    document.querySelector('#timer').textContent = '0:00';
+    timerInterval = setInterval(() =>{
+        secondsPassed++;
+        document.querySelector('#timer').textContent = secondsToTimeString(secondsPassed);
+    }, 1000);
+}
+
+const pauseTimer = () => {
+    if (paused) {
+        timerInterval = setInterval(() =>{
+            secondsPassed++;
+            document.querySelector('#timer').textContent = secondsToTimeString(secondsPassed);
+        }, 1000);
+        paused = false;
+    } else {
+        clearInterval(timerInterval);
+        paused = true;
+    }
+    toggleBoardView();
+}
+
+const toggleBoardView = () => {
+    document.querySelector('#play-area').querySelectorAll('.grid-container').forEach((grid) => {
+        grid.classList.toggle('hide');
+    })
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+    startTimer();
+
     // Gets all the cells in order of rows
     let gameCells = document.querySelectorAll('.sudoku-cell');
 
@@ -240,10 +286,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (editKeys.includes(e.key)) {
             if (selectedCell.length == 0) {
                 return;
-            } else if (e.key == 'Backspace') {
-                selectedCell.textContent = '';
-            } else {
-                selectedCell.textContent = e.key;
+            } else if (e.key == 'Backspace' && !selectedCell.unmodifiable) {
+                selectedCell.textContent = selectedCell.textContent.slice(0, selectedCell.textContent.length - 1);
+            } else if (selectedCell.textContent.length < 5 && !selectedCell.textContent.includes(e.key) && !selectedCell.unmodifiable) {
+                selectedCell.textContent += e.key;
             }
         } else if (movementKeys.includes(e.key)) {
             if (selectedCell.length == 0) {
@@ -297,6 +343,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.querySelector('#new-game-button').addEventListener("click", (e) => {
-        initializeGrid(20);
+        initializeGrid(35);
+    });
+
+    document.querySelector('#pause-game-button').addEventListener("click", (e) => {
+        pauseTimer();
     });
 });

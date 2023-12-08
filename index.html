@@ -12,7 +12,7 @@
 
         <div class="wrapper flex-container-col">
             <!-- Unsolved sudoku puzzle from https://en.wikipedia.org/wiki/Sudoku#/media/File:Sudoku_Puzzle_by_L2G-20050714_standardized_layout.svg -->
-            <div>
+            <div id="play-area">
                 <div class="grid-container">
                     <div class="sudoku-cell">5</div>
                     <div class="sudoku-cell">3</div>
@@ -127,6 +127,8 @@
         </div>
 
         <div>
+            <div id="timer">0:00</div>
+            <button id="pause-game-button">Pause</button>
             <div class="grid-container">
                 <div class="side-container">
                     <button>Erase</button>
