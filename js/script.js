@@ -312,7 +312,9 @@ const changeCellValue = (e) => {
             sudokuNumberCell.textContent = e.key;
             noteContainer.style.display = 'none';
             highlightSameNumbers(selectedCell.x, selectedCell.y);
+            checkWin();
         }
+        
     } else if (movementKeys.includes(e.key)) {
         if (selectedCell.length == 0) {
             clickCell(sudokuGrid[0][0]);
@@ -324,6 +326,9 @@ const changeCellValue = (e) => {
 }
 
 const highlightSelection = (x, y) => {
+    if (!validPosition(x, y)) {
+        return;
+    }
     const highlightAreas = new Set();
     for (let i = 0; i < 9; i++) {
         if (!highlightAreas.has(`${x} ${i}`)) {
@@ -377,7 +382,11 @@ const clearHighlights = () => {
 }
 
 const checkWin = () => {
-    
+    if (checkSolution()) {
+        setTimeout(() => {
+            alert('You Win!');
+        }, 100);
+    }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -437,6 +446,7 @@ document.addEventListener("DOMContentLoaded", () => {
         backTrackMe(sudokuGrid);
         let end = Date.now();
         console.log(`Solved in ${(end - start) / 1000}s.`);
+        checkWin();
     });
 
     document.querySelector('#clear-board-button').addEventListener("click", (e) => {
