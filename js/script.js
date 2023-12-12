@@ -10,6 +10,7 @@ let selectedCell = '';
 let secondsPassed = 0;
 let timerInterval;
 let paused = false;
+let noteMode = false;
 
 const initializeGrid = (hintNum) => {
     clearBoard();
@@ -69,7 +70,7 @@ const clickCell = (e) => {
     if (selectedCell.length != 0) {
         selectedCell.classList.toggle('selected-cell');
     }
-    selectedCell = e.target || e;
+    selectedCell = e.target.parentElement || e.parentElement;
     selectedCell.classList.toggle('selected-cell');
 }
 
@@ -221,13 +222,20 @@ const clearBoard = () => {
     clearInterval(timerInterval);
     secondsPassed = 0;
     startTimer();
-
+    clearNotes();
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             sudokuGrid[i][j].textContent = '';
             sudokuGrid[i][j].textContent.unmodifiable = false;
             sudokuGrid[i][j].classList.remove('modifiable');
         }
+    }
+}
+
+const clearNotes = () => {
+    const notes = document.querySelectorAll('.note-1, .note-2, .note-3, .note-4, .note-5, .note-6, .note-7, .note-8, .note-9');
+    for (let note of notes) {
+        note.remove();
     }
 }
 
@@ -263,6 +271,49 @@ const toggleBoardView = () => {
     })
 }
 
+const setNote = (key, cell) => {
+    let className = `note-${key}`;
+    let noteDiv = cell.querySelector(`.${className}`);
+    if (noteDiv) {
+        noteDiv.remove();
+    } else {
+        const newNoteDiv = document.createElement("div");
+        newNoteDiv.classList += className;
+        newNoteDiv.textContent = key;
+        cell.querySelector('.note-container').append(newNoteDiv);
+    }
+}
+
+const changeCellValue = (e) => {
+    if (editKeys.includes(e.key)) {
+        if (selectedCell.length == 0) {
+            return;
+        }
+
+        if (noteMode && e.key != 'Backspace') {
+            setNote(e.key, selectedCell);
+            return;
+        }
+
+        let sudokuNumberCell = selectedCell.querySelector('.sudoku-number');
+        let noteContainer = selectedCell.querySelector('.note-container');
+        if (e.key == 'Backspace' && !selectedCell.unmodifiable) {
+            sudokuNumberCell.textContent = sudokuNumberCell.textContent.slice(0, sudokuNumberCell.textContent.length - 1);
+            noteContainer.style.display = 'grid';
+        } else if (sudokuNumberCell.textContent.length < 2 && !selectedCell.unmodifiable) {
+            sudokuNumberCell.textContent = e.key;
+            noteContainer.style.display = 'none';
+        }
+    } else if (movementKeys.includes(e.key)) {
+        if (selectedCell.length == 0) {
+            clickCell(sudokuGrid[0][0]);
+        } else {
+            moveInDirection(e.key);
+        }
+    }
+    return;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     startTimer();
 
@@ -273,7 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
     gameCells.forEach((gameCell, i) => {
         gameCell.x = Math.floor(i / 9);
         gameCell.y = i % 9;
-        sudokuGrid.push(gameCell);
+        sudokuGrid.push(gameCell.querySelector('.sudoku-number'));
         gameCell.editable = true;
         gameCell.addEventListener("click", clickCell);
     });
@@ -282,24 +333,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sudokuGrid = flatTo2d(sudokuGrid, 9);
 
     // Detects valid keypresses
-    document.addEventListener("keydown", (e) => {
-        if (editKeys.includes(e.key)) {
-            if (selectedCell.length == 0) {
-                return;
-            } else if (e.key == 'Backspace' && !selectedCell.unmodifiable) {
-                selectedCell.textContent = selectedCell.textContent.slice(0, selectedCell.textContent.length - 1);
-            } else if (selectedCell.textContent.length < 5 && !selectedCell.textContent.includes(e.key) && !selectedCell.unmodifiable) {
-                selectedCell.textContent += e.key;
-            }
-        } else if (movementKeys.includes(e.key)) {
-            if (selectedCell.length == 0) {
-                clickCell(sudokuGrid[0][0]);
-            } else {
-                moveInDirection(e.key);
-            }
-        }
-        return;
-    });
+    document.addEventListener("keydown", changeCellValue);
 
     // Configuring multiple buttons
     document.querySelector('#check-row-button').addEventListener("click", (e) => {
@@ -333,6 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelector('#solve-for-me-button').addEventListener("click", (e) => {
         let start = Date.now();
+        clearNotes();
         backTrackMe(sudokuGrid);
         let end = Date.now();
         console.log(`Solved in ${(end - start) / 1000}s.`);
@@ -348,5 +383,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelector('#pause-game-button').addEventListener("click", (e) => {
         pauseTimer();
+    });
+
+    document.querySelector('#note-toggle-checkbox').addEventListener("click", (e) => {
+        noteMode = !noteMode;
     });
 });
