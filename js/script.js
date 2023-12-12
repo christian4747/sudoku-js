@@ -73,9 +73,11 @@ const clickCellEvent = (e) => {
 const clickCell = (e) => {
     if (selectedCell.length != 0) {
         highlightSelection(selectedCell.x, selectedCell.y);
+        highlightSameNumbers(selectedCell.x, selectedCell.y);
     }
     selectedCell = e.parentElement;
     highlightSelection(selectedCell.x, selectedCell.y);
+    highlightSameNumbers(selectedCell.x, selectedCell.y);
 }
 
 const moveInDirection = (key) => {
@@ -227,6 +229,7 @@ const clearBoard = () => {
     secondsPassed = 0;
     startTimer();
     clearNotes();
+    clearHighlights();
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             sudokuGrid[i][j].textContent = '';
@@ -300,11 +303,15 @@ const changeCellValue = (e) => {
         let sudokuNumberCell = selectedCell.querySelector('.sudoku-number');
         let noteContainer = selectedCell.querySelector('.note-container');
         if (e.key == 'Backspace' && !sudokuNumberCell.unmodifiable) {
+            highlightSameNumbers(selectedCell.x, selectedCell.y);
             sudokuNumberCell.textContent = sudokuNumberCell.textContent.slice(0, sudokuNumberCell.textContent.length - 1);
             noteContainer.style.display = 'grid';
+            sudokuGrid[selectedCell.x][selectedCell.y].parentElement.classList.toggle('selected-cell-dark');
         } else if (sudokuNumberCell.textContent.length < 2 && !sudokuNumberCell.unmodifiable) {
+            highlightSameNumbers(selectedCell.x, selectedCell.y);
             sudokuNumberCell.textContent = e.key;
             noteContainer.style.display = 'none';
+            highlightSameNumbers(selectedCell.x, selectedCell.y);
         }
     } else if (movementKeys.includes(e.key)) {
         if (selectedCell.length == 0) {
@@ -321,12 +328,12 @@ const highlightSelection = (x, y) => {
     for (let i = 0; i < 9; i++) {
         if (!highlightAreas.has(`${x} ${i}`)) {
             highlightAreas.add(`${x} ${i}`);
-            sudokuGrid[x][i].parentElement.classList.toggle('selected-cell-dark');
+            sudokuGrid[x][i].parentElement.classList.toggle('selected-cell');
         }
 
         if (!highlightAreas.has(`${i} ${y}`)) {
             highlightAreas.add(`${i} ${y}`);
-            sudokuGrid[i][y].parentElement.classList.toggle('selected-cell-dark');
+            sudokuGrid[i][y].parentElement.classList.toggle('selected-cell');
         }
     }
 
@@ -337,6 +344,34 @@ const highlightSelection = (x, y) => {
                 highlightAreas.add(`${i} ${j}`);
                 sudokuGrid[i][j].parentElement.classList.toggle('selected-cell');
             }
+        }
+    }
+}
+
+const highlightSameNumbers = (x, y) => {
+    if (sudokuGrid[x][y].textContent == '') {
+        sudokuGrid[x][y].parentElement.classList.toggle('selected-cell-dark');
+        return;
+    }
+    let num = sudokuGrid[x][y].textContent;
+
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            let check = sudokuGrid[i][j];
+            if (num == check.textContent) {
+                check.parentElement.classList.toggle('selected-cell-dark');
+            }
+        }
+    }
+}
+
+const clearHighlights = () => {
+    selectedCell = '';
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            let check = sudokuGrid[i][j];
+            check.parentElement.classList.remove('selected-cell-dark');
+            check.parentElement.classList.remove('selected-cell');
         }
     }
 }
@@ -398,6 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector('#solve-for-me-button').addEventListener("click", (e) => {
         let start = Date.now();
         clearNotes();
+        clearHighlights();
         backTrackMe(sudokuGrid);
         let end = Date.now();
         console.log(`Solved in ${(end - start) / 1000}s.`);
