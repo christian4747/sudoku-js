@@ -52,6 +52,7 @@
     height: 100%;
     grid-area: 1 / 1 / 1 / 1;
     background-color: rgb(0, 0, 0, .001);
+    pointer-events: all;
 }
 
 .sudoku-cell {
@@ -63,6 +64,7 @@
     border-right: 1px solid black;
     color: darkblue;
     font-weight: bold;
+    pointer-events: none;
 }
 
 .sudoku-cell:nth-child(3), .sudoku-cell:nth-child(6) {
