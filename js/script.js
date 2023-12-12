@@ -66,11 +66,15 @@ const flatTo2d = (arr, len) => {
     return newArray;
 }
 
+const clickCellEvent = (e) => {
+    clickCell(e.target);
+}
+
 const clickCell = (e) => {
     if (selectedCell.length != 0) {
         selectedCell.classList.toggle('selected-cell');
     }
-    selectedCell = e.target.parentElement || e.parentElement;
+    selectedCell = e.parentElement;
     selectedCell.classList.toggle('selected-cell');
 }
 
@@ -266,9 +270,7 @@ const pauseTimer = () => {
 }
 
 const toggleBoardView = () => {
-    document.querySelector('#play-area').querySelectorAll('.grid-container').forEach((grid) => {
-        grid.classList.toggle('hide');
-    })
+    document.querySelector('#play-area').classList.toggle('hide');
 }
 
 const setNote = (key, cell) => {
@@ -297,10 +299,10 @@ const changeCellValue = (e) => {
 
         let sudokuNumberCell = selectedCell.querySelector('.sudoku-number');
         let noteContainer = selectedCell.querySelector('.note-container');
-        if (e.key == 'Backspace' && !selectedCell.unmodifiable) {
+        if (e.key == 'Backspace' && !sudokuNumberCell.unmodifiable) {
             sudokuNumberCell.textContent = sudokuNumberCell.textContent.slice(0, sudokuNumberCell.textContent.length - 1);
             noteContainer.style.display = 'grid';
-        } else if (sudokuNumberCell.textContent.length < 2 && !selectedCell.unmodifiable) {
+        } else if (sudokuNumberCell.textContent.length < 2 && !sudokuNumberCell.unmodifiable) {
             sudokuNumberCell.textContent = e.key;
             noteContainer.style.display = 'none';
         }
@@ -325,8 +327,7 @@ document.addEventListener("DOMContentLoaded", () => {
         gameCell.x = Math.floor(i / 9);
         gameCell.y = i % 9;
         sudokuGrid.push(gameCell.querySelector('.sudoku-number'));
-        gameCell.editable = true;
-        gameCell.addEventListener("click", clickCell);
+        gameCell.addEventListener("click", clickCellEvent);
     });
 
     // Change the grid to 2d
