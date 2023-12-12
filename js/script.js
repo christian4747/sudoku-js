@@ -72,10 +72,10 @@ const clickCellEvent = (e) => {
 
 const clickCell = (e) => {
     if (selectedCell.length != 0) {
-        selectedCell.classList.toggle('selected-cell');
+        highlightSelection(selectedCell.x, selectedCell.y);
     }
     selectedCell = e.parentElement;
-    selectedCell.classList.toggle('selected-cell');
+    highlightSelection(selectedCell.x, selectedCell.y);
 }
 
 const moveInDirection = (key) => {
@@ -314,6 +314,35 @@ const changeCellValue = (e) => {
         }
     }
     return;
+}
+
+const highlightSelection = (x, y) => {
+    const highlightAreas = new Set();
+    for (let i = 0; i < 9; i++) {
+        if (!highlightAreas.has(`${x} ${i}`)) {
+            highlightAreas.add(`${x} ${i}`);
+            sudokuGrid[x][i].parentElement.classList.toggle('selected-cell-dark');
+        }
+
+        if (!highlightAreas.has(`${i} ${y}`)) {
+            highlightAreas.add(`${i} ${y}`);
+            sudokuGrid[i][y].parentElement.classList.toggle('selected-cell-dark');
+        }
+    }
+
+    let centerPoint = closestGrid(x, y);
+    for (let i = centerPoint[0] - 1; i < centerPoint[0] + 2; i++) {
+        for (let j = centerPoint[1] - 1; j < centerPoint[1] + 2; j++) {
+            if (!highlightAreas.has(`${i} ${j}`)) {
+                highlightAreas.add(`${i} ${j}`);
+                sudokuGrid[i][j].parentElement.classList.toggle('selected-cell');
+            }
+        }
+    }
+}
+
+const checkWin = () => {
+    
 }
 
 document.addEventListener("DOMContentLoaded", () => {

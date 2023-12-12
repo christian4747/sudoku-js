@@ -71,11 +71,15 @@
 
 .sudoku-cell:hover {
     cursor: pointer;
-    background-color: rgb(240, 128, 128, .1);
+    background-color: rgb(240, 128, 128, .7);
 }
 
 .selected-cell {
-    background-color: rgb(240, 128, 128, .1);
+    background-color: rgb(240, 128, 128, .3);
+}
+
+.selected-cell-dark {
+    background-color: rgb(240, 128, 128, .7);
 }
 
 .modifiable {
@@ -102,6 +106,7 @@
 .note-container > div {
     font-size: 10.5px;
     background-color: rgba(0, 0, 0, 0);
+    color: black;
 }
 
 .note-1 {
