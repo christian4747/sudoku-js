@@ -6,11 +6,15 @@ const gridCenters = [
     [7, 1], [7, 4], [7, 7],
 ];
 let sudokuGrid = [];
+let previousActions = [];
+let redoActions = [];
+let lastActionUndo = false;
 let selectedCell = '';
 let secondsPassed = 0;
 let timerInterval;
 let paused = false;
 let noteMode = false;
+const jsConfetti = new JSConfetti();
 
 const initializeGrid = (hintNum) => {
     clearBoard();
@@ -230,6 +234,7 @@ const clearBoard = () => {
     startTimer();
     clearNotes();
     clearHighlights();
+    clearSelectedCell();
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             sudokuGrid[i][j].textContent = '';
@@ -246,12 +251,21 @@ const clearNotes = () => {
     }
 }
 
+const clearSelectedCellNotes = () => {
+
+}
+
+const clearSelectedCell = () => {
+    selectedCell = '';
+}
+
 const secondsToTimeString = (seconds) => {
-    return seconds % 60 < 10 ? `${Math.floor(seconds / 60)}:0${seconds % 60}` : `${Math.floor(seconds / 60)}:${seconds % 60}`
+    return seconds % 60 < 10 ? `${Math.floor(seconds / 60)}:0${seconds % 60}` : `${Math.floor(seconds / 60)}:${seconds % 60}`;
 }
 
 const startTimer = () => {
     document.querySelector('#timer').textContent = '0:00';
+    clearInterval(timerInterval);
     timerInterval = setInterval(() =>{
         secondsPassed++;
         document.querySelector('#timer').textContent = secondsToTimeString(secondsPassed);
@@ -259,62 +273,215 @@ const startTimer = () => {
 }
 
 const pauseTimer = () => {
+    if (!paused) {
+        clearInterval(timerInterval);
+        paused = true;
+    }
+}
+
+const resumeTimer = () => {
     if (paused) {
         timerInterval = setInterval(() =>{
             secondsPassed++;
             document.querySelector('#timer').textContent = secondsToTimeString(secondsPassed);
         }, 1000);
         paused = false;
-    } else {
-        clearInterval(timerInterval);
-        paused = true;
     }
-    toggleBoardView();
+}
+
+const resetTimer = () => {
+
 }
 
 const toggleBoardView = () => {
     document.querySelector('#play-area').classList.toggle('hide');
 }
 
-const setNote = (key, cell) => {
+const getNotes = (cell) => {
+
+}
+
+const setNote = (key, x, y) => {
+    if (getCellValue(x, y) != '') {
+        hideCellNotes(x, y);
+    } else {
+        showCellNotes(x, y);
+    }
+    selectCell(x, y);
     let className = `note-${key}`;
-    let noteDiv = cell.querySelector(`.${className}`);
+    let noteDiv = selectedCell.querySelector(`.${className}`);
     if (noteDiv) {
         noteDiv.remove();
     } else {
         const newNoteDiv = document.createElement("div");
         newNoteDiv.classList += className;
         newNoteDiv.textContent = key;
-        cell.querySelector('.note-container').append(newNoteDiv);
+        selectedCell.querySelector('.note-container').append(newNoteDiv);
     }
 }
 
-const changeCellValue = (e) => {
-    if (editKeys.includes(e.key)) {
+const setSelectedNote = (key) => {
+    if (getSelectedCellValue() != '') {
+        hideCurrentCellNotes();
+    } else {
+        showCurrentCellNotes();
+    }
+    let className = `note-${key}`;
+    let noteDiv = selectedCell.querySelector(`.${className}`);
+    if (noteDiv) {
+        noteDiv.remove();
+    } else {
+        const newNoteDiv = document.createElement("div");
+        newNoteDiv.classList += className;
+        newNoteDiv.textContent = key;
+        selectedCell.querySelector('.note-container').append(newNoteDiv);
+    }
+}
+
+const canSelectedBeModified = () => {
+    return !selectedCell.unmodifiable;
+}
+
+const getSelectedSudokuCell = () => {
+
+}
+
+const getSelectedCell = () => {
+    return selectedCell;
+}
+
+const getCellValue = (x, y) => {
+    if (selectedCell === '') {
+        return '';
+    } else {
+        let sudokuNumberCell = sudokuGrid[x][y].textContent;
+        return sudokuNumberCell;
+    }
+}
+
+const getSelectedCellValue = () => {
+    if (selectedCell === '') {
+        return '';
+    } else {
+        let sudokuNumberCell = selectedCell.querySelector('.sudoku-number');
+        return sudokuNumberCell.textContent;
+    }
+}
+
+const setCellValue = (val, x, y) => {
+    selectCell(x, y);
+    let sudokuNumberCell = selectedCell.querySelector('.sudoku-number');
+    sudokuNumberCell.textContent = val;
+    hideCurrentCellNotes();
+    // highlightSameNumbers(selectedCell.x, selectedCell.y);
+    // checkWin();
+}
+
+const setSelectedCellValue = (val) => {
+    highlightSameNumbers(selectedCell.x, selectedCell.y);
+
+    let sudokuNumberCell = selectedCell.querySelector('.sudoku-number');
+    sudokuNumberCell.textContent = val;
+    
+
+    hideCurrentCellNotes();
+    highlightSameNumbers(selectedCell.x, selectedCell.y);
+    checkWin();
+}
+
+const removeCellValue = (x, y) => {
+    selectCell(x, y);
+    let sudokuNumberCell = selectedCell.querySelector('.sudoku-number');
+    sudokuNumberCell.textContent = '';
+    showCurrentCellNotes();
+}
+
+const removeSelectedCellValue = () => {
+    highlightSameNumbers(selectedCell.x, selectedCell.y);
+
+    let sudokuNumberCell = selectedCell.querySelector('.sudoku-number');
+    
+    sudokuNumberCell.textContent = '';
+
+    showCurrentCellNotes();
+    focusSelectedCell();
+}
+
+const selectCell = (x, y) => {
+    console.log(selectedCell.x, x, selectedCell.y, y);
+    if (selectedCell.x == x && selectedCell.y == y) {
+        highlightUndo();
+        setTimeout(() => {
+            clearHighlights();
+            clearSelectedCell();
+        }, 200);
+        return;
+    }
+    console.log(selectedCell);
+    console.log('unfocused selected');
+    selectedCell = sudokuGrid[x][y].parentElement;
+    highlightUndo();
+    console.log(selectedCell);
+    console.log('focused selected');
+    setTimeout(() => {
+        clearHighlights();
+        clearSelectedCell();
+    }, 200);
+}
+
+const showCurrentCellNotes = () => {
+    let noteContainer = selectedCell.querySelector('.note-container');
+    noteContainer.style.display = 'grid';
+}
+
+const showCellNotes = (x, y) => {
+    let noteContainer = sudokuGrid[x][y].parentElement.querySelector('.note-container');
+    noteContainer.style.display = 'grid';
+}
+
+const hideCurrentCellNotes = () => {
+    let noteContainer = selectedCell.querySelector('.note-container');
+    noteContainer.style.display = 'none';
+}
+
+const hideCellNotes = (x, y) => {
+    let noteContainer = sudokuGrid[x][y].parentElement.querySelector('.note-container');
+    noteContainer.style.display = 'none';
+}
+
+const focusSelectedCell = () => {
+    sudokuGrid[selectedCell.x][selectedCell.y].parentElement.classList.toggle('selected-cell-dark');
+}
+
+const focusCell = (x, y) => {
+    sudokuGrid[x][y].parentElement.classList.toggle('selected-cell-dark');
+}
+
+const highlightUndo = () => {
+    sudokuGrid[selectedCell.x][selectedCell.y].parentElement.classList.toggle('selected-cell-undo');
+}
+
+const handleKeydown = (e) => {
+    if (lastActionUndo) {
+        redoActions = [];
+        lastActionUndo = false;
+    }
+    
+    if (noteMode && editKeys.includes(e.key) && e.key != 'Backspace') {
+        previousActions.push(['toggle-note', null, e.key, selectedCell.x, selectedCell.y]);
+        setSelectedNote(e.key);
+    } else if (editKeys.includes(e.key)) {
         if (selectedCell.length == 0) {
             return;
         }
 
-        if (noteMode && e.key != 'Backspace') {
-            setNote(e.key, selectedCell);
-            return;
+        if (e.key == 'Backspace' && canSelectedBeModified() && getSelectedCellValue() != '') {
+            previousActions.push(['remove', getSelectedCellValue(), null, selectedCell.x, selectedCell.y]);
+            removeSelectedCellValue();
+        } else if (e.key != 'Backspace' && canSelectedBeModified()) {
+            previousActions.push(['set', getSelectedCellValue(), e.key, selectedCell.x, selectedCell.y]);
+            setSelectedCellValue(e.key);
         }
-
-        let sudokuNumberCell = selectedCell.querySelector('.sudoku-number');
-        let noteContainer = selectedCell.querySelector('.note-container');
-        if (e.key == 'Backspace' && !sudokuNumberCell.unmodifiable) {
-            highlightSameNumbers(selectedCell.x, selectedCell.y);
-            sudokuNumberCell.textContent = sudokuNumberCell.textContent.slice(0, sudokuNumberCell.textContent.length - 1);
-            noteContainer.style.display = 'grid';
-            sudokuGrid[selectedCell.x][selectedCell.y].parentElement.classList.toggle('selected-cell-dark');
-        } else if (sudokuNumberCell.textContent.length < 2 && !sudokuNumberCell.unmodifiable) {
-            highlightSameNumbers(selectedCell.x, selectedCell.y);
-            sudokuNumberCell.textContent = e.key;
-            noteContainer.style.display = 'none';
-            highlightSameNumbers(selectedCell.x, selectedCell.y);
-            checkWin();
-        }
-        
     } else if (movementKeys.includes(e.key)) {
         if (selectedCell.length == 0) {
             clickCell(sudokuGrid[0][0]);
@@ -322,7 +489,56 @@ const changeCellValue = (e) => {
             moveInDirection(e.key);
         }
     }
+    // console.log(previousActions);
     return;
+}
+
+const handleAction = (command, prev, val, x, y, undo) => {
+    console.log(command, prev, val, x, y, undo);
+    clearHighlights();
+    switch (command) {
+        case 'remove':
+            if (undo) {
+                setCellValue(prev, x, y);
+            } else {
+                removeCellValue(x, y);
+            }
+            break;
+        case 'set':
+            if (undo) {
+                setCellValue(prev, x, y);
+                if (prev == '') {
+                    console.log('hello');
+                    showCellNotes(x, y);
+                }
+            } else {
+                setCellValue(val, x, y);
+            }
+            break;
+        case 'toggle-note':
+            console.log('hitting notes')
+            setNote(val, x, y);
+            break;
+    }
+}
+
+const undoAction = () => {
+    if (previousActions.length == 0) {
+        return;
+    }
+    let actionToPerform = previousActions.pop();
+    handleAction(actionToPerform[0], actionToPerform[1], actionToPerform[2], actionToPerform[3], actionToPerform[4], true);
+    redoActions.push(actionToPerform);
+    lastActionUndo = true;
+}
+
+const redoAction = () => {
+    if (redoActions.length == 0) {
+        return;
+    }
+    let actionToPerform = redoActions.pop();
+    handleAction(actionToPerform[0], actionToPerform[1], actionToPerform[2], actionToPerform[3], actionToPerform[4], false);
+    previousActions.push(actionToPerform);
 }
 
 const highlightSelection = (x, y) => {
@@ -371,21 +587,22 @@ const highlightSameNumbers = (x, y) => {
 }
 
 const clearHighlights = () => {
-    selectedCell = '';
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             let check = sudokuGrid[i][j];
             check.parentElement.classList.remove('selected-cell-dark');
             check.parentElement.classList.remove('selected-cell');
+            check.parentElement.classList.remove('selected-cell-undo');
         }
     }
 }
 
 const checkWin = () => {
     if (checkSolution()) {
-        setTimeout(() => {
-            alert('You Win!');
-        }, 100);
+        jsConfetti.addConfetti();
+        // setTimeout(() => {
+        //     alert('You Win!');
+        // }, 500);
     }
 }
 
@@ -407,7 +624,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sudokuGrid = flatTo2d(sudokuGrid, 9);
 
     // Detects valid keypresses
-    document.addEventListener("keydown", changeCellValue);
+    document.addEventListener("keydown", handleKeydown);
 
     // Configuring multiple buttons
     document.querySelector('#check-row-button').addEventListener("click", (e) => {
@@ -454,14 +671,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.querySelector('#new-game-button').addEventListener("click", (e) => {
-        initializeGrid(35);
+        let modal = document.querySelector('#new-game-modal');
+        modal.style.display = 'block';
+    });
+
+    document.querySelector('.close').addEventListener("click", (e) => {
+        let modal = document.querySelector('#new-game-modal');
+        modal.style.display = 'none';
+    });
+
+    document.querySelector('#start-game-button').addEventListener("click", (e) => {
+        let numOfHints = document.querySelector('#hint-number-input');
+        if (numOfHints.value > 80 || numOfHints.value < 0) {
+            document.querySelector('#number-error').classList.remove('hide');
+        } else {
+            document.querySelector('#number-error').classList.add('hide');
+            let modal = document.querySelector('#new-game-modal');
+            modal.style.display = 'none';
+            initializeGrid(numOfHints.value);
+        }
     });
 
     document.querySelector('#pause-game-button').addEventListener("click", (e) => {
-        pauseTimer();
+        if (!paused) {
+            pauseTimer();
+        } else {
+            resumeTimer();
+        }
+        
+        toggleBoardView();
     });
 
     document.querySelector('#note-toggle-checkbox').addEventListener("click", (e) => {
         noteMode = !noteMode;
+    });
+
+    document.querySelector('#undo-button').addEventListener("click", (e) => {
+        undoAction();
+    });
+
+    document.querySelector('#redo-button').addEventListener("click", (e) => {
+        redoAction();
     });
 });
