@@ -1,21 +1,55 @@
+/**
+ * Important things to note about the structure of this project:
+ * The grid itself is composed of 9 rows or "sudoku-cells".
+ * Each "sudoku-cell" contains a "sudoku-number" which stores the number value and shows it to the user.
+ * Each "sudoku-cell" also contains a "note-container".
+ * Each "note-container" stores "note-{1-9}" which controls showing number notes for each cell.
+ * Manipulations on the board are mainly composed of changing the textContent of "sudoku-number" elements.
+ */
+
+// # CONSTANT VARIABLES # //
+
+// List of keys that can be used to edit a square's value
 const editKeys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'Backspace'];
+// List of keys that can be used to move around the grid space
 const movementKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+// Center of each 3x3 on the grid used for calcuations
 const gridCenters = [
     [1, 1], [1, 4], [1, 7],
     [4, 1], [4, 4], [4, 7],
     [7, 1], [7, 4], [7, 7],
 ];
+
+// # VARIABLES # //
+
+// Contains the "sudoku-number" (element storing the number in plain text on the html) for each cell in the grid
 let sudokuGrid = [];
+// An array of performed actions for the undo functionality
 let previousActions = [];
+// An array of "undo'd" actions, allowing them to be "redo'd"
 let redoActions = [];
+// Whether or not the last performed user action was an undo
 let lastActionUndo = false;
+// The user's currently selected cell
 let selectedCell = '';
+// How many seconds have passed in the game
 let secondsPassed = 0;
+// Stores the setInterval() for the game's timer
 let timerInterval;
+// Whether or not the game is paused
+// TODO: fix pausing and bugs with timer
 let paused = false;
+// Whether or not the user is setting notes for grid spaces
 let noteMode = false;
+// Used to add confetti on game win
 const jsConfetti = new JSConfetti();
 
+// # GAME FUNCTIONS & LOGIC # //
+
+/**
+ * Initializes a brand new sudoku grid.
+ * @param {int} hintNum the number of hints included in the new board
+ */
 const initializeGrid = (hintNum) => {
     clearBoard();
     backTrackMe(sudokuGrid);
@@ -26,7 +60,7 @@ const initializeGrid = (hintNum) => {
         let to2d = positionConversion(i, 9);
         sudokuGrid[to2d[0]][to2d[1]].unmodifiable = true;
     }
-    fisherYatesShuffe(randomArray);
+    fisherYatesShuffle(randomArray);
 
     let positions = [];
     for (let i = 0; i < 81 - hintNum; i++) {
@@ -41,7 +75,11 @@ const initializeGrid = (hintNum) => {
     }
 }
 
-const fisherYatesShuffe = (arr) => {
+/**
+ * Performs the Fisher-Yates shuffle algorithm on an array.
+ * @param {Array} arr the array to be shuffled
+ */
+const fisherYatesShuffle = (arr) => {
     for (let i = arr.length - 1; i > 0; i--) {
         let j = Math.floor(Math.random() * (arr.length - 1));
         let temp = arr[i];
@@ -50,14 +88,33 @@ const fisherYatesShuffe = (arr) => {
     }
 }
 
+/**
+ * Returns a position (Array [x, y]) based on the given 1d position and total cells in the grid.
+ * Helpful for transforming a flat 1d position (cell 1-81) to a 2d position (cell [x, y]).
+ * @param {int} num the cell's position to convert to x and y
+ * @param {int} len the total amount of cells in the grid
+ * @returns an Array [x, y] where position num is located on the grid
+ */
 const positionConversion = (num, len) => {
     return [Math.floor(num / len), num % len];
 }
 
+/**
+ * Returns whether a given x or y is valid for the sudoku grid.
+ * @param {int} x the x value coordinate on the grid 
+ * @param {int} y the y value coordinate on the grid
+ * @returns true if x and y position is valid for the grid, false otherwise
+ */
 const validPosition = (x, y) => {
     return !(x < 0 || x > 8 || y < 0 || y > 8);
 }
 
+/**
+ * Transforms a 1d Array to a 2d Array.
+ * @param {Array} arr Array to be transformed to 2d
+ * @param {int} len width and height of the new array
+ * @returns the given 1d Array transformed into a 2d Array
+ */
 const flatTo2d = (arr, len) => {
     let newArray = new Array(len);
     for (let i = 0; i < len; i++) {
@@ -70,10 +127,18 @@ const flatTo2d = (arr, len) => {
     return newArray;
 }
 
+/**
+ * Handles what should happen when a sudoku cell is directly clicked.
+ * @param {Event} e the Event from clicking
+ */
 const clickCellEvent = (e) => {
     clickCell(e.target);
 }
 
+/**
+ * Highlights the sudoku cell that is clicked or navigated to with arrow keys.
+ * @param {*} e the sudoku cell element to highlight
+ */
 const clickCell = (e) => {
     if (selectedCell.length != 0) {
         highlightSelection(selectedCell.x, selectedCell.y);
@@ -84,6 +149,10 @@ const clickCell = (e) => {
     highlightSameNumbers(selectedCell.x, selectedCell.y);
 }
 
+/**
+ * Handles movement around the grid with arrow keys.
+ * @param {String} key the key which has been pressed
+ */
 const moveInDirection = (key) => {
     if (key == 'ArrowUp') {
         if (validPosition(selectedCell.x - 1, selectedCell.y)) {
@@ -104,6 +173,11 @@ const moveInDirection = (key) => {
     }
 }
 
+/**
+ * Checks whether row x is a valid row according to sudoku rules.
+ * @param {int} x the row to check
+ * @returns true if the row is valid, false otherwise
+ */
 const checkRow = (x) => {
     let current = [];
     for (let i = 0; i < 9; i++) {
@@ -118,6 +192,11 @@ const checkRow = (x) => {
     return true;
 }
 
+/**
+ * Checks whether column y a valid column according to sudoku rules.
+ * @param {int} y the column to be checked
+ * @returns true if the column is valid, false otherwise
+ */
 const checkCol = (y) => {
     let current = [];
     for (let i = 0; i < 9; i++) {
@@ -132,6 +211,12 @@ const checkCol = (y) => {
     return true;
 }
 
+/**
+ * Checks whether the 3x3 grid closest to the x and y position is valid according to sudoku rules.
+ * @param {int} x the x position of the position to check
+ * @param {int} y the y position of the position to check
+ * @returns 
+ */
 const checkGrid = (x, y) => {
     let centerPoint = closestGrid(x, y);
     let current = [];
@@ -150,6 +235,12 @@ const checkGrid = (x, y) => {
     return true;
 }
 
+/**
+ * Returns a position (Array [x, y]) of the nearest grid's center point from the given x and y position.
+ * @param {int} x the x position of the nearest grid to find for
+ * @param {int} y the y position of the nearest grid to find for
+ * @returns the position (Array [x, y]) of the nearest grid center to the given x and y position.
+ */
 const closestGrid = (x, y) => {
     let least, centerPoint;
     for (let gridCenter of gridCenters) {
@@ -168,10 +259,22 @@ const closestGrid = (x, y) => {
     return centerPoint;
 }
 
+/**
+ * Returns the distance between two [x, y] position.
+ * @param {*} x1 the x of the first position
+ * @param {*} y1 the y of the first position
+ * @param {*} x2 the x of the second position
+ * @param {*} y2 the y of the second position
+ * @returns the distance between the two given positions
+ */
 const dist = (x1, y1, x2, y2) => {
     return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
 }
 
+/**
+ * Checks whether the game board is still valid within sudoku rules.
+ * @returns true if the game is still valid, false otherwise
+ */
 const checkGame = () => {
     let valid = true;
     for (let i = 0; i < 9; i++) {
@@ -181,6 +284,10 @@ const checkGame = () => {
     return valid;
 }
 
+/**
+ * Checks whether a completed board is valid within sudoku rules.
+ * @returns true if the completed board is valid, false otherwise
+ */
 const checkSolution = () => {
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
@@ -192,6 +299,11 @@ const checkSolution = () => {
     return checkGame();
 }
 
+/**
+ * Returns the first empty space found on the sudoku board.
+ * @param {Array} grid the grid to search an empty spot for
+ * @returns position (Array [x, y]) of the first empty space, or [-1, -1] if none
+ */
 const findEmptySpace = (grid) => {
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
@@ -206,8 +318,10 @@ const findEmptySpace = (grid) => {
 /**
  * With reference from https://www.geeksforgeeks.org/sudoku-backtracking-7/
  * and https://brilliant.org/wiki/recursive-backtracking/
- * @param {*} grid 
- * @returns 
+ * 
+ * Performs backtracking on the sudoku grid to solve the puzzle or create random new ones. 
+ * @param {Array} grid the grid to perform backtracking on
+ * @returns true if successfully backtracks, false otherwise
  */
 const backTrackMe = (grid) => {
     if (checkSolution()) {
@@ -228,6 +342,10 @@ const backTrackMe = (grid) => {
     return false;
 }
 
+/**
+ * Clears the sudoku game board, resetting everything a clean board.
+ * TODO: fix timer and undo pause
+ */
 const clearBoard = () => {
     clearInterval(timerInterval);
     secondsPassed = 0;
@@ -244,6 +362,9 @@ const clearBoard = () => {
     }
 }
 
+/**
+ * Removes all notes on the sudoku board.
+ */
 const clearNotes = () => {
     const notes = document.querySelectorAll('.note-1, .note-2, .note-3, .note-4, .note-5, .note-6, .note-7, .note-8, .note-9');
     for (let note of notes) {
@@ -255,10 +376,18 @@ const clearSelectedCellNotes = () => {
 
 }
 
+/**
+ * Clears the currently selected cell (sets it an empty string).
+ */
 const clearSelectedCell = () => {
     selectedCell = '';
 }
 
+/**
+ * Returns a string formatted in {minutes:seconds} based on the given number.
+ * @param {int} seconds the number of seconds to convert to {minutes:seconds}
+ * @returns the {minutes:seconds} string that corresponds to the given amount of seconds
+ */
 const secondsToTimeString = (seconds) => {
     return seconds % 60 < 10 ? `${Math.floor(seconds / 60)}:0${seconds % 60}` : `${Math.floor(seconds / 60)}:${seconds % 60}`;
 }
@@ -461,6 +590,7 @@ const highlightUndo = () => {
     sudokuGrid[selectedCell.x][selectedCell.y].parentElement.classList.toggle('selected-cell-undo');
 }
 
+// TODO: call a note removal when entering a number that intersects with a note, allow for undos
 const handleKeydown = (e) => {
     if (lastActionUndo) {
         redoActions = [];
@@ -519,6 +649,9 @@ const handleAction = (command, prev, val, x, y, undo) => {
             console.log('hitting notes')
             setNote(val, x, y);
             break;
+        default:
+            console.log(`Unknown action: ${command}`);
+            break;
     }
 }
 
@@ -541,6 +674,8 @@ const redoAction = () => {
     previousActions.push(actionToPerform);
 }
 
+// TODO: Rewrite highlights to be more intuitive/less hardcoded
+// e.g. use getCells
 const highlightSelection = (x, y) => {
     if (!validPosition(x, y)) {
         return;
@@ -600,6 +735,7 @@ const clearHighlights = () => {
 const checkWin = () => {
     if (checkSolution()) {
         jsConfetti.addConfetti();
+        // TODO: Replace this with a modal
         // setTimeout(() => {
         //     alert('You Win!');
         // }, 500);
@@ -660,6 +796,7 @@ document.addEventListener("DOMContentLoaded", () => {
         let start = Date.now();
         clearNotes();
         clearHighlights();
+        clearSelectedCell();
         backTrackMe(sudokuGrid);
         let end = Date.now();
         console.log(`Solved in ${(end - start) / 1000}s.`);
@@ -713,4 +850,16 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector('#redo-button').addEventListener("click", (e) => {
         redoAction();
     });
+
+    document.querySelector('#erase-button').addEventListener("click", (e) => {
+        e.key = 'Backspace';
+        handleKeydown(e);
+    });
+
+    document.querySelectorAll('.keypad-key').forEach((key) => {
+        key.addEventListener("click", (e) => {
+            e.key = key.textContent;
+            handleKeydown(e);
+        })
+    })
 });

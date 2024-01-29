@@ -20,9 +20,9 @@
         </div>
     </div>
 
-    <div class="flex-container">
+    <div id="main-container" class="flex-container">
 
-        <div class="wrapper flex-container-col">
+        <div id="sudoku-board" class="wrapper flex-container-col">
             <!-- Unsolved sudoku puzzle from https://en.wikipedia.org/wiki/Sudoku#/media/File:Sudoku_Puzzle_by_L2G-20050714_standardized_layout.svg -->
             <div id="play-area">
                 <div class="grid-container">
@@ -381,28 +381,42 @@
 
         </div>
 
-        <div>
-            <div id="timer">0:00</div>
-            <button id="pause-game-button">Pause</button>
-            <input id="note-toggle-checkbox" name="note-toggle" type="checkbox">
-            <label for="note-toggle-checkbox">Note Mode</label>
-            <div class="grid-container">
-                <div class="side-container">
-                    <button>Erase</button>
-                    <button id="undo-button">Undo</button>
-                    <button id="redo-button">Redo</button>
-                    <button id="check-row-button">Check Current Row</button>
-                    <button id="check-column-button">Check Current Column</button>
-                    <button id="check-grid-button">Check Current Grid</button>
-                    <button id="check-game-button">Check Game</button>
-                    <button id="check-solution-button">Check Solution</button>
-                    <button id="solve-for-me-button">Solve for me :3</button>
-                    <button id="clear-board-button">Clear</button>
-                    <button id="new-game-button">New Game!</button>
-                </div>
+        <div class="flex-container-col">
+            <div class="keypad">
+                <button class="keypad-key">1</button>
+                <button class="keypad-key">2</button>
+                <button class="keypad-key">3</button>
+                <button class="keypad-key">4</button>
+                <button class="keypad-key">5</button>
+                <button class="keypad-key">6</button>
+                <button class="keypad-key">7</button>
+                <button class="keypad-key">8</button>
+                <button class="keypad-key">9</button>
+                <button id="undo-button">Undo</button>
+                <button id="erase-button">Erase</button>
+                <button id="redo-button">Redo</button>
+            </div>
 
+            <div id="settings">
+                <div id="timer">0:00</div>
+                <button id="pause-game-button">Pause</button>
+                <input id="note-toggle-checkbox" name="note-toggle" type="checkbox">
+                <label for="note-toggle-checkbox">Note Mode</label>
+                <div class="grid-container">
+                    <div class="side-container flex-container">
+                        <button id="check-row-button">Check Current Row</button>
+                        <button id="check-column-button">Check Current Column</button>
+                        <button id="check-grid-button">Check Current Grid</button>
+                        <button id="check-game-button">Check Game</button>
+                        <button id="check-solution-button">Check Solution</button>
+                        <button id="solve-for-me-button">Solve for me :3</button>
+                        <button id="clear-board-button">Clear</button>
+                        <button id="new-game-button">New Game!</button>
+                    </div>
+                </div>
             </div>
         </div>
+        
     </div>
     
     

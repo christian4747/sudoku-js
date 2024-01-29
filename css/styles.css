@@ -5,6 +5,12 @@
     box-sizing: border-box;
 }
 
+button {
+    width: 50px;
+    height: 50px;
+    border-radius: 7px;
+}
+
 canvas {
     background-color: transparent;
 }
@@ -14,6 +20,7 @@ canvas {
     align-items: center;
     justify-content: center;
     gap: 5px;
+    flex-wrap: wrap;
 }
 
 .flex-container-col {
@@ -40,8 +47,10 @@ canvas {
 }
 
 .side-container {
-    width: 200px;
-    height: 200px;
+    width: 300px;
+    padding: 5px;
+    align-items: flex-start;
+    justify-content: flex-start;
 }
 
 .container {
@@ -186,7 +195,56 @@ canvas {
     cursor: pointer; 
 }
 
+.keypad {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px 5px;
+    width: 200px;
+}
+
+.keypad-key {
+    width: 50px;
+    height: 40px;
+}
+
 @keyframes fromtop {
     from {top: -50%; opacity: 0;}
     to {top: 50%; opacity: 1;}
+}
+
+@media screen and (max-width: 800px) {
+    #main-container {
+        flex-direction: column;
+    }
+
+    .flex-container {
+        flex-wrap: wrap;
+    }
+
+    .wrapper {
+        margin-top: 5px;
+        height: auto;
+    }
+
+    #settings {
+        width: 70%;
+    }
+
+    .sudoku-cell {
+        grid-template-rows: 40px;
+        grid-template-columns: 40px;
+    }
+
+    .note-container > div {
+        font-size: 9px
+    }
+
+    .side-container {
+        width: 100%;
+        height: 100%;
+    }
+
+    .keypad {
+        width: 170px;
+    }
 }
