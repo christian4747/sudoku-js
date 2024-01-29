@@ -20,6 +20,13 @@
         </div>
     </div>
 
+    <div class="modal" id="game-won-modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="game-won-text">Congratulations! You win!</div>
+        </div>
+    </div>
+
     <div id="main-container" class="flex-container">
 
         <div id="sudoku-board" class="wrapper flex-container-col">
@@ -402,7 +409,7 @@
                 <button id="pause-game-button">Pause</button>
                 <input id="note-toggle-checkbox" name="note-toggle" type="checkbox">
                 <label for="note-toggle-checkbox">Note Mode</label>
-                <div class="grid-container">
+                <div>
                     <div class="side-container flex-container">
                         <button id="check-row-button">Check Current Row</button>
                         <button id="check-column-button">Check Current Column</button>
@@ -412,6 +419,7 @@
                         <button id="solve-for-me-button">Solve for me :3</button>
                         <button id="clear-board-button">Clear</button>
                         <button id="new-game-button">New Game!</button>
+                        <button id="dark-mode-button">Toggle Dark Mode</button>
                     </div>
                 </div>
             </div>

@@ -1,14 +1,24 @@
 * {
     margin: 0;
     padding: 0;
-    background-color: lightgray;
     box-sizing: border-box;
+    background-color: white;
 }
 
 button {
     width: 50px;
     height: 50px;
-    border-radius: 7px;
+    border-radius: 10px;
+    border: 1px solid gray;
+    transition: .5s;
+}
+
+button:hover {
+    background-color: rgba(0, 119, 255, 0.5);
+}
+
+#pause-game-button {
+    margin-bottom: 5px;
 }
 
 canvas {
@@ -39,7 +49,7 @@ canvas {
 }
 
 .grid-container:nth-child(4), .grid-container:nth-child(7) {
-    border-top: 2px solid darkblue;
+    border-top: 2px solid black;
 }
 
 .bottom-border {
@@ -48,7 +58,6 @@ canvas {
 
 .side-container {
     width: 300px;
-    padding: 5px;
     align-items: flex-start;
     justify-content: flex-start;
 }
@@ -75,30 +84,31 @@ canvas {
     text-align: center;
     transition: .1s;
     border-right: 1px solid black;
-    color: darkblue;
+    color: black;
     font-weight: bold;
     pointer-events: none;
+    background-color: white;
 }
 
 .sudoku-cell:nth-child(3), .sudoku-cell:nth-child(6) {
-    border-right: 2px solid darkblue;
+    border-right: 2px solid black;
 }
 
 .sudoku-cell:hover {
     cursor: pointer;
-    background-color: rgb(128, 128, 240, .7);
+    background-color: rgba(0, 119, 255, .6);
 }
 
 .selected-cell {
-    background-color: rgb(128, 128, 240, .3);
+    background-color: rgba(0, 119, 255, .3);
 }
 
 .selected-cell-dark {
-    background-color: rgb(128, 128, 240, .7);
+    background-color: rgba(0, 119, 255, .6);
 }
 
 .selected-cell-undo {
-    background-color: rgb(128, 128, 240, .85);
+    background-color: rgba(0, 119, 255, .85);
 }
 
 .modifiable {
@@ -212,7 +222,34 @@ canvas {
     to {top: 50%; opacity: 1;}
 }
 
+.light-mode {
+    animation-name: fadeToLight;
+    animation-duration: .5s;
+    filter: invert(0%);
+}
+
+.dark-mode {
+    animation-name: fadeToDark;
+    animation-duration: .5s;
+    filter: invert(85%);
+}
+
+@keyframes fadeToDark {
+    from {filter: invert(0%);}
+    to {filter: invert(85%);}
+}
+
+@keyframes fadeToLight {
+    from {filter: invert(85%);}
+    to {filter: invert(0%);}
+}
+
 @media screen and (max-width: 800px) {
+
+    body {
+        height: 100vh;
+    }
+
     #main-container {
         flex-direction: column;
     }

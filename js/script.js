@@ -4,7 +4,7 @@
  * Each "sudoku-cell" contains a "sudoku-number" which stores the number value and shows it to the user.
  * Each "sudoku-cell" also contains a "note-container".
  * Each "note-container" stores "note-{1-9}" which controls showing number notes for each cell.
- * Manipulations on the board are mainly composed of changing the textContent of "sudoku-number" elements.
+ * Manipulations on the board are mainly composed of changing the textContent of "sudoku-number" elements which are stored in "sudokuGrid".
  */
 
 // # CONSTANT VARIABLES # //
@@ -19,8 +19,10 @@ const gridCenters = [
     [4, 1], [4, 4], [4, 7],
     [7, 1], [7, 4], [7, 7],
 ];
+// Used to add confetti on game win
+const jsConfetti = new JSConfetti();
 
-// # VARIABLES # //
+// # NON-CONSTANT VARIABLES # //
 
 // Contains the "sudoku-number" (element storing the number in plain text on the html) for each cell in the grid
 let sudokuGrid = [];
@@ -37,12 +39,11 @@ let secondsPassed = 0;
 // Stores the setInterval() for the game's timer
 let timerInterval;
 // Whether or not the game is paused
-// TODO: fix pausing and bugs with timer
 let paused = false;
 // Whether or not the user is setting notes for grid spaces
 let noteMode = false;
-// Used to add confetti on game win
-const jsConfetti = new JSConfetti();
+// Whether or not darkMode is enabled
+let darkMode = false;
 
 // # GAME FUNCTIONS & LOGIC # //
 
@@ -137,7 +138,7 @@ const clickCellEvent = (e) => {
 
 /**
  * Highlights the sudoku cell that is clicked or navigated to with arrow keys.
- * @param {*} e the sudoku cell element to highlight
+ * @param {Element} e the sudoku cell element to highlight
  */
 const clickCell = (e) => {
     if (selectedCell.length != 0) {
@@ -261,10 +262,10 @@ const closestGrid = (x, y) => {
 
 /**
  * Returns the distance between two [x, y] position.
- * @param {*} x1 the x of the first position
- * @param {*} y1 the y of the first position
- * @param {*} x2 the x of the second position
- * @param {*} y2 the y of the second position
+ * @param {int} x1 the x of the first position
+ * @param {int} y1 the y of the first position
+ * @param {int} x2 the x of the second position
+ * @param {int} y2 the y of the second position
  * @returns the distance between the two given positions
  */
 const dist = (x1, y1, x2, y2) => {
@@ -344,15 +345,15 @@ const backTrackMe = (grid) => {
 
 /**
  * Clears the sudoku game board, resetting everything a clean board.
- * TODO: fix timer and undo pause
  */
 const clearBoard = () => {
     clearInterval(timerInterval);
     secondsPassed = 0;
-    startTimer();
+    restartTimer();
     clearNotes();
     clearHighlights();
     clearSelectedCell();
+    showBoardView();
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             sudokuGrid[i][j].textContent = '';
@@ -372,12 +373,15 @@ const clearNotes = () => {
     }
 }
 
+/**
+ * Clears the notes of the selected "sudoku-cell".
+ */
 const clearSelectedCellNotes = () => {
-
+    // TODO: Add implementation
 }
 
 /**
- * Clears the currently selected cell (sets it an empty string).
+ * Clears the currently selected "sudoku-cell" (sets it an empty string).
  */
 const clearSelectedCell = () => {
     selectedCell = '';
@@ -392,7 +396,11 @@ const secondsToTimeString = (seconds) => {
     return seconds % 60 < 10 ? `${Math.floor(seconds / 60)}:0${seconds % 60}` : `${Math.floor(seconds / 60)}:${seconds % 60}`;
 }
 
-const startTimer = () => {
+/**
+ * Restarts the game's timer.
+ */
+const restartTimer = () => {
+    paused = false;
     document.querySelector('#timer').textContent = '0:00';
     clearInterval(timerInterval);
     timerInterval = setInterval(() =>{
@@ -401,6 +409,9 @@ const startTimer = () => {
     }, 1000);
 }
 
+/**
+ * Pauses the game's timer.
+ */
 const pauseTimer = () => {
     if (!paused) {
         clearInterval(timerInterval);
@@ -408,6 +419,9 @@ const pauseTimer = () => {
     }
 }
 
+/**
+ * Resumes the game's timer from a paused state.
+ */
 const resumeTimer = () => {
     if (paused) {
         timerInterval = setInterval(() =>{
@@ -418,18 +432,36 @@ const resumeTimer = () => {
     }
 }
 
-const resetTimer = () => {
-
+/**
+ * Hides the view of the sudoku board.
+ */
+const hideBoardView = () => {
+    document.querySelector('#play-area').classList.add('hide');
 }
 
-const toggleBoardView = () => {
-    document.querySelector('#play-area').classList.toggle('hide');
+/**
+ * Shows the view of the sudoku board
+ */
+const showBoardView = () => {
+    document.querySelector('#play-area').classList.remove('hide');
 }
 
+/**
+ * Returns the notes currently in a given "sudoku-cell".
+ * @param {Element} cell the cell to return the notes for
+ * @returns an array containing the notes the cell has
+ */
 const getNotes = (cell) => {
-
+    // TODO: Add implementation
+    return [];
 }
 
+/**
+ * Toggles a note for the value "key" at the position [x, y].
+ * @param {int} key the value of the note (ex. 1, 2, 3)
+ * @param {int} x the x value of the cell to modify
+ * @param {int} y the y value of the cell to modify
+ */
 const setNote = (key, x, y) => {
     if (getCellValue(x, y) != '') {
         hideCellNotes(x, y);
@@ -449,6 +481,10 @@ const setNote = (key, x, y) => {
     }
 }
 
+/**
+ * Toggles a note for the value "key" for the currently selected "sudoku-cell".
+ * @param {int} key the value of the note (ex. 1, 2, 3)
+ */
 const setSelectedNote = (key) => {
     if (getSelectedCellValue() != '') {
         hideCurrentCellNotes();
@@ -467,18 +503,36 @@ const setSelectedNote = (key) => {
     }
 }
 
+/**
+ * Returns whether or not the current cell can be modified.
+ * @returns true if can be modified, false otherwise
+ */
 const canSelectedBeModified = () => {
     return !selectedCell.unmodifiable;
 }
 
+/**
+ * Returns the "sudoku-cell" element of the currently selected "sudoku-cell".
+ * @returns the "sudoku-cell" element of the currently selected "sudoku-cell"
+ */
 const getSelectedSudokuCell = () => {
-
+    // TODO: Add implementation
 }
 
+/**
+ * Returns the "sudoku-number" element of the currently selected "sudoku-cell".
+ * @returns the "sudoku-number" element of the currently selected "sudoku-cell"
+ */
 const getSelectedCell = () => {
     return selectedCell;
 }
 
+/**
+ * Returns the "sudoku-number" value of the "sudoku-cell" located at [x, y].
+ * @param {int} x location x of the cell
+ * @param {int} y location y of the cell
+ * @returns the "sudoku-number" value of the "sudoku-cell" located at [x, y]
+ */
 const getCellValue = (x, y) => {
     if (selectedCell === '') {
         return '';
@@ -488,6 +542,10 @@ const getCellValue = (x, y) => {
     }
 }
 
+/**
+ * Returns the "sudoku-number" value of the currently selected "sudoku-cell".
+ * @returns the "sudoku-number" value of the currently selected "sudoku-cell"
+ */
 const getSelectedCellValue = () => {
     if (selectedCell === '') {
         return '';
@@ -497,6 +555,12 @@ const getSelectedCellValue = () => {
     }
 }
 
+/**
+ * Sets the value of a "sudoku-number" to "val" at the location [x, y].
+ * @param {*} val the value to set for the cell
+ * @param {*} x the x location of the cell
+ * @param {*} y the y location of the cell
+ */
 const setCellValue = (val, x, y) => {
     selectCell(x, y);
     let sudokuNumberCell = selectedCell.querySelector('.sudoku-number');
@@ -506,6 +570,10 @@ const setCellValue = (val, x, y) => {
     // checkWin();
 }
 
+/**
+ * Sets the value of a "sudoku-number" to "val" of the currently selected "sudoku-cell".
+ * @param {*} val the value to set for the cell
+ */
 const setSelectedCellValue = (val) => {
     highlightSameNumbers(selectedCell.x, selectedCell.y);
 
@@ -518,6 +586,11 @@ const setSelectedCellValue = (val) => {
     checkWin();
 }
 
+/**
+ * Removes the current "sudoku-number" value of the "sudoku-cell" located at [x, y].
+ * @param {*} x the x location of the cell
+ * @param {*} y the y location of the cell
+ */
 const removeCellValue = (x, y) => {
     selectCell(x, y);
     let sudokuNumberCell = selectedCell.querySelector('.sudoku-number');
@@ -525,6 +598,9 @@ const removeCellValue = (x, y) => {
     showCurrentCellNotes();
 }
 
+/**
+ * Removes the current "sudoku-number" value of the currently selected "sudoku-cell".
+ */
 const removeSelectedCellValue = () => {
     highlightSameNumbers(selectedCell.x, selectedCell.y);
 
@@ -536,6 +612,12 @@ const removeSelectedCellValue = () => {
     focusSelectedCell();
 }
 
+/**
+ * Used during "undo" and "redo" operations.
+ * Selects the "sudoku-cell" at the given x and y and then highlights it.
+ * @param {*} x the x position of the cell
+ * @param {*} y the y position of the cell
+ */
 const selectCell = (x, y) => {
     console.log(selectedCell.x, x, selectedCell.y, y);
     if (selectedCell.x == x && selectedCell.y == y) {
@@ -558,39 +640,70 @@ const selectCell = (x, y) => {
     }, 200);
 }
 
+/**
+ * Shows the notes currently present on the current "sudoku-cell".
+ */
 const showCurrentCellNotes = () => {
     let noteContainer = selectedCell.querySelector('.note-container');
     noteContainer.style.display = 'grid';
 }
 
+/**
+ * Shows the notes currently present on the "sudoku-cell" located at [x, y].
+ * @param {*} x the x location of the cell
+ * @param {*} y the y location of the cell
+ */
 const showCellNotes = (x, y) => {
     let noteContainer = sudokuGrid[x][y].parentElement.querySelector('.note-container');
     noteContainer.style.display = 'grid';
 }
 
+/**
+ * Hides the notes currently present on the current "sudoku-cell".
+ */
 const hideCurrentCellNotes = () => {
     let noteContainer = selectedCell.querySelector('.note-container');
     noteContainer.style.display = 'none';
 }
 
+/**
+ * Hides the notes currently present on the "sudoku-cell" located at [x, y].
+ * @param {*} x the x location of the cell
+ * @param {*} y the y location of the cell
+ */
 const hideCellNotes = (x, y) => {
     let noteContainer = sudokuGrid[x][y].parentElement.querySelector('.note-container');
     noteContainer.style.display = 'none';
 }
 
+/**
+ * Focuses the currently selected "sudoku-cell" by highlighting it on the board.
+ */
 const focusSelectedCell = () => {
     sudokuGrid[selectedCell.x][selectedCell.y].parentElement.classList.toggle('selected-cell-dark');
 }
 
+/**
+ * Focuses a "sudoku-cell" at the location [x, y] by highlighting it.
+ * @param {*} x the x position of the cell
+ * @param {*} y the y position of the cell.
+ */
 const focusCell = (x, y) => {
     sudokuGrid[x][y].parentElement.classList.toggle('selected-cell-dark');
 }
 
+/**
+ * Used in "undo" and "redo" operations; highlights a cell that has been "undo'd" or "redo'd" for the player.
+ */
 const highlightUndo = () => {
     sudokuGrid[selectedCell.x][selectedCell.y].parentElement.classList.toggle('selected-cell-undo');
 }
 
 // TODO: call a note removal when entering a number that intersects with a note, allow for undos
+/**
+ * Handles how the game should react to keypresses.
+ * @param {Event} e the event caused by pressing a button
+ */
 const handleKeydown = (e) => {
     if (lastActionUndo) {
         redoActions = [];
@@ -623,6 +736,15 @@ const handleKeydown = (e) => {
     return;
 }
 
+/**
+ * Handles "undo"-ing and "redo"-ing actions on the sudoku board.
+ * @param {*} command the operation to undo, redo (ex. set, remove, toggle-note)
+ * @param {*} prev the previous value before the change (if applicable)
+ * @param {*} val the value to change to (if applicable)
+ * @param {*} x the x value of the "sudoku-cell" to "undo" or "redo"
+ * @param {*} y the y value of the "sudoku-cell" to "undo" or "redo"
+ * @param {*} undo true if the action is an undo, false if the action is a redo
+ */
 const handleAction = (command, prev, val, x, y, undo) => {
     console.log(command, prev, val, x, y, undo);
     clearHighlights();
@@ -655,6 +777,9 @@ const handleAction = (command, prev, val, x, y, undo) => {
     }
 }
 
+/**
+ * Undoes an action on the sudoku board.
+ */
 const undoAction = () => {
     if (previousActions.length == 0) {
         return;
@@ -665,6 +790,9 @@ const undoAction = () => {
     lastActionUndo = true;
 }
 
+/**
+ * Redos an action on the sudoku board.
+ */
 const redoAction = () => {
     if (redoActions.length == 0) {
         return;
@@ -676,6 +804,12 @@ const redoAction = () => {
 
 // TODO: Rewrite highlights to be more intuitive/less hardcoded
 // e.g. use getCells
+/**
+ * Highlights the "sudoku-cell" at the position [x, y].
+ * @param {*} x the position x of a cell
+ * @param {*} y the position y of a cell
+ * @returns 
+ */
 const highlightSelection = (x, y) => {
     if (!validPosition(x, y)) {
         return;
@@ -704,6 +838,12 @@ const highlightSelection = (x, y) => {
     }
 }
 
+/**
+ * Highlights locations on the board the contain the same value as the "sudoku-cell" at [x, y].
+ * @param {*} x the position x of the cell
+ * @param {*} y the position y of the cell
+ * @returns 
+ */
 const highlightSameNumbers = (x, y) => {
     if (sudokuGrid[x][y].textContent == '') {
         sudokuGrid[x][y].parentElement.classList.toggle('selected-cell-dark');
@@ -721,6 +861,9 @@ const highlightSameNumbers = (x, y) => {
     }
 }
 
+/**
+ * Clears all currently highlighted "sudoku-cell"s on the board.
+ */
 const clearHighlights = () => {
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
@@ -732,18 +875,25 @@ const clearHighlights = () => {
     }
 }
 
+/**
+ * Checks whether the sudoku game is in a winning position.
+ */
 const checkWin = () => {
     if (checkSolution()) {
         jsConfetti.addConfetti();
-        // TODO: Replace this with a modal
-        // setTimeout(() => {
-        //     alert('You Win!');
-        // }, 500);
+        document.querySelector('#game-won-text').textContent = `Congratuations! You won! Your time was: ${secondsToTimeString(secondsPassed)}.`;
+        setTimeout(() => {
+            let modal = document.querySelector('#game-won-modal');
+            modal.style.display = 'block';
+        }, 750);
     }
 }
 
+/**
+ * Starts the game and hooks up button once the DOM loads.
+ */
 document.addEventListener("DOMContentLoaded", () => {
-    startTimer();
+    restartTimer();
 
     // Gets all the cells in order of rows
     let gameCells = document.querySelectorAll('.sudoku-cell');
@@ -812,9 +962,11 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.style.display = 'block';
     });
 
-    document.querySelector('.close').addEventListener("click", (e) => {
-        let modal = document.querySelector('#new-game-modal');
-        modal.style.display = 'none';
+    document.querySelectorAll('.close').forEach((button) => {
+        button.addEventListener("click", (e) => {
+            let modal = button.parentElement.parentElement;
+            modal.style.display = 'none';
+        });
     });
 
     document.querySelector('#start-game-button').addEventListener("click", (e) => {
@@ -832,11 +984,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector('#pause-game-button').addEventListener("click", (e) => {
         if (!paused) {
             pauseTimer();
+            hideBoardView();
         } else {
             resumeTimer();
+            showBoardView();
         }
-        
-        toggleBoardView();
     });
 
     document.querySelector('#note-toggle-checkbox').addEventListener("click", (e) => {
@@ -861,5 +1013,16 @@ document.addEventListener("DOMContentLoaded", () => {
             e.key = key.textContent;
             handleKeydown(e);
         })
-    })
+    });
+
+    document.querySelector('#dark-mode-button').addEventListener("click", (e) => {
+        if (darkMode) {
+            document.body.classList.remove('dark-mode');
+            document.body.classList.add('light-mode');
+        } else {
+            document.body.classList.add('dark-mode');
+            document.body.classList.remove('light-mode');
+        }
+        darkMode = !darkMode;
+    });
 });
