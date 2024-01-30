@@ -133,6 +133,9 @@ const flatTo2d = (arr, len) => {
  * @param {Event} e the Event from clicking
  */
 const clickCellEvent = (e) => {
+    if (paused) {
+        return;
+    }
     clickCell(e.target);
 }
 
@@ -347,6 +350,8 @@ const backTrackMe = (grid) => {
  * Clears the sudoku game board, resetting everything a clean board.
  */
 const clearBoard = () => {
+    previousActions = [];
+    redoActions = [];
     clearInterval(timerInterval);
     secondsPassed = 0;
     restartTimer();
@@ -434,16 +439,29 @@ const resumeTimer = () => {
 
 /**
  * Hides the view of the sudoku board.
+ * TODO: Hide cells instead of whole board
  */
 const hideBoardView = () => {
-    document.querySelector('#play-area').classList.add('hide');
+    for (let cell of document.querySelectorAll('.sudoku-number')) {
+        cell.classList.add('hide');
+    }
+    for (let cell of document.querySelectorAll('.note-container')) {
+        cell.classList.add('hide');
+    }
+    // document.querySelector('#play-area').classList.add('hide');
 }
 
 /**
  * Shows the view of the sudoku board
  */
 const showBoardView = () => {
-    document.querySelector('#play-area').classList.remove('hide');
+    for (let cell of document.querySelectorAll('.sudoku-number')) {
+        cell.classList.remove('hide');
+    }
+    for (let cell of document.querySelectorAll('.note-container')) {
+        cell.classList.remove('hide');
+    }
+    // document.querySelector('#play-area').classList.remove('hide');
 }
 
 /**
@@ -504,11 +522,11 @@ const setSelectedNote = (key) => {
 }
 
 /**
- * Returns whether or not the current cell can be modified.
+ * Returns whether or not the current "sudoku-cell"'s "sudoku-number" can be modified.
  * @returns true if can be modified, false otherwise
  */
 const canSelectedBeModified = () => {
-    return !selectedCell.unmodifiable;
+    return !selectedCell.querySelector('.sudoku-number').unmodifiable;
 }
 
 /**
@@ -557,9 +575,9 @@ const getSelectedCellValue = () => {
 
 /**
  * Sets the value of a "sudoku-number" to "val" at the location [x, y].
- * @param {*} val the value to set for the cell
- * @param {*} x the x location of the cell
- * @param {*} y the y location of the cell
+ * @param {int} val the value to set for the cell
+ * @param {int} x the x location of the cell
+ * @param {int} y the y location of the cell
  */
 const setCellValue = (val, x, y) => {
     selectCell(x, y);
@@ -572,7 +590,7 @@ const setCellValue = (val, x, y) => {
 
 /**
  * Sets the value of a "sudoku-number" to "val" of the currently selected "sudoku-cell".
- * @param {*} val the value to set for the cell
+ * @param {int} val the value to set for the cell
  */
 const setSelectedCellValue = (val) => {
     highlightSameNumbers(selectedCell.x, selectedCell.y);
@@ -588,8 +606,8 @@ const setSelectedCellValue = (val) => {
 
 /**
  * Removes the current "sudoku-number" value of the "sudoku-cell" located at [x, y].
- * @param {*} x the x location of the cell
- * @param {*} y the y location of the cell
+ * @param {int} x the x location of the cell
+ * @param {int} y the y location of the cell
  */
 const removeCellValue = (x, y) => {
     selectCell(x, y);
@@ -615,8 +633,8 @@ const removeSelectedCellValue = () => {
 /**
  * Used during "undo" and "redo" operations.
  * Selects the "sudoku-cell" at the given x and y and then highlights it.
- * @param {*} x the x position of the cell
- * @param {*} y the y position of the cell
+ * @param {int} x the x position of the cell
+ * @param {int} y the y position of the cell
  */
 const selectCell = (x, y) => {
     console.log(selectedCell.x, x, selectedCell.y, y);
@@ -650,8 +668,8 @@ const showCurrentCellNotes = () => {
 
 /**
  * Shows the notes currently present on the "sudoku-cell" located at [x, y].
- * @param {*} x the x location of the cell
- * @param {*} y the y location of the cell
+ * @param {int} x the x location of the cell
+ * @param {int} y the y location of the cell
  */
 const showCellNotes = (x, y) => {
     let noteContainer = sudokuGrid[x][y].parentElement.querySelector('.note-container');
@@ -668,8 +686,8 @@ const hideCurrentCellNotes = () => {
 
 /**
  * Hides the notes currently present on the "sudoku-cell" located at [x, y].
- * @param {*} x the x location of the cell
- * @param {*} y the y location of the cell
+ * @param {int} x the x location of the cell
+ * @param {int} y the y location of the cell
  */
 const hideCellNotes = (x, y) => {
     let noteContainer = sudokuGrid[x][y].parentElement.querySelector('.note-container');
@@ -685,8 +703,8 @@ const focusSelectedCell = () => {
 
 /**
  * Focuses a "sudoku-cell" at the location [x, y] by highlighting it.
- * @param {*} x the x position of the cell
- * @param {*} y the y position of the cell.
+ * @param {int} x the x position of the cell
+ * @param {int} y the y position of the cell
  */
 const focusCell = (x, y) => {
     sudokuGrid[x][y].parentElement.classList.toggle('selected-cell-dark');
@@ -705,6 +723,10 @@ const highlightUndo = () => {
  * @param {Event} e the event caused by pressing a button
  */
 const handleKeydown = (e) => {
+    if (paused) {
+        return;
+    }
+
     if (lastActionUndo) {
         redoActions = [];
         lastActionUndo = false;
@@ -738,12 +760,12 @@ const handleKeydown = (e) => {
 
 /**
  * Handles "undo"-ing and "redo"-ing actions on the sudoku board.
- * @param {*} command the operation to undo, redo (ex. set, remove, toggle-note)
- * @param {*} prev the previous value before the change (if applicable)
- * @param {*} val the value to change to (if applicable)
- * @param {*} x the x value of the "sudoku-cell" to "undo" or "redo"
- * @param {*} y the y value of the "sudoku-cell" to "undo" or "redo"
- * @param {*} undo true if the action is an undo, false if the action is a redo
+ * @param {String} command the operation to undo, redo (ex. set, remove, toggle-note)
+ * @param {int} prev the previous value before the change (if applicable)
+ * @param {int} val the value to change to (if applicable)
+ * @param {int} x the x value of the "sudoku-cell" to "undo" or "redo"
+ * @param {int} y the y value of the "sudoku-cell" to "undo" or "redo"
+ * @param {boolean} undo true if the action is an undo, false if the action is a redo
  */
 const handleAction = (command, prev, val, x, y, undo) => {
     console.log(command, prev, val, x, y, undo);
@@ -806,8 +828,8 @@ const redoAction = () => {
 // e.g. use getCells
 /**
  * Highlights the "sudoku-cell" at the position [x, y].
- * @param {*} x the position x of a cell
- * @param {*} y the position y of a cell
+ * @param {int} x the position x of a cell
+ * @param {int} y the position y of a cell
  * @returns 
  */
 const highlightSelection = (x, y) => {
@@ -840,8 +862,8 @@ const highlightSelection = (x, y) => {
 
 /**
  * Highlights locations on the board the contain the same value as the "sudoku-cell" at [x, y].
- * @param {*} x the position x of the cell
- * @param {*} y the position y of the cell
+ * @param {int} x the position x of the cell
+ * @param {int} y the position y of the cell
  * @returns 
  */
 const highlightSameNumbers = (x, y) => {
@@ -912,37 +934,38 @@ document.addEventListener("DOMContentLoaded", () => {
     // Detects valid keypresses
     document.addEventListener("keydown", handleKeydown);
 
-    // Configuring multiple buttons
-    document.querySelector('#check-row-button').addEventListener("click", (e) => {
-        if (selectedCell.length == 0) {
-            return;
-        }
-        console.log(checkRow(selectedCell.x));
-    });
+    // Debug buttons
+    // document.querySelector('#check-row-button').addEventListener("click", (e) => {
+    //     if (selectedCell.length == 0) {
+    //         return;
+    //     }
+    //     console.log(checkRow(selectedCell.x));
+    // });
 
-    document.querySelector('#check-column-button').addEventListener("click", (e) => {
-        if (selectedCell.length == 0) {
-            return;
-        }
-        console.log(checkCol(selectedCell.y));
-    });
+    // document.querySelector('#check-column-button').addEventListener("click", (e) => {
+    //     if (selectedCell.length == 0) {
+    //         return;
+    //     }
+    //     console.log(checkCol(selectedCell.y));
+    // });
 
-    document.querySelector('#check-grid-button').addEventListener("click", (e) => {
-        if (selectedCell.length == 0) {
-            return;
-        }
-        console.log(checkGrid(selectedCell.x, selectedCell.y));
-    });
+    // document.querySelector('#check-grid-button').addEventListener("click", (e) => {
+    //     if (selectedCell.length == 0) {
+    //         return;
+    //     }
+    //     console.log(checkGrid(selectedCell.x, selectedCell.y));
+    // });
 
-    document.querySelector('#check-game-button').addEventListener("click", (e) => {
-        console.log(checkGame());
-    });
+    // document.querySelector('#check-game-button').addEventListener("click", (e) => {
+    //     console.log(checkGame());
+    // });
 
-    document.querySelector('#check-solution-button').addEventListener("click", (e) => {
-        console.log(checkSolution());
-    });
+    // document.querySelector('#check-solution-button').addEventListener("click", (e) => {
+    //     console.log(checkSolution());
+    // });
 
     document.querySelector('#solve-for-me-button').addEventListener("click", (e) => {
+        if (paused) return;
         let start = Date.now();
         clearNotes();
         clearHighlights();
@@ -996,22 +1019,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.querySelector('#undo-button').addEventListener("click", (e) => {
-        undoAction();
+        if (!paused) undoAction();
     });
 
     document.querySelector('#redo-button').addEventListener("click", (e) => {
-        redoAction();
+        if (!paused) redoAction();
     });
 
     document.querySelector('#erase-button').addEventListener("click", (e) => {
-        e.key = 'Backspace';
-        handleKeydown(e);
+        if (!paused) {
+            e.key = 'Backspace';
+            handleKeydown(e);
+        }
     });
 
     document.querySelectorAll('.keypad-key').forEach((key) => {
         key.addEventListener("click", (e) => {
-            e.key = key.textContent;
-            handleKeydown(e);
+            if (!paused) {
+                e.key = key.textContent;
+                handleKeydown(e);
+            }
         })
     });
 
