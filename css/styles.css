@@ -121,6 +121,8 @@ canvas {
 
 .hide {
     display: none;
+    animation-name: opacityFadeHide;
+    animation-duration: .5s;
 }
 
 .note-container {
@@ -225,16 +227,19 @@ canvas {
     to {top: 50%; opacity: 1;}
 }
 
-.light-mode {
+.light-mode-anim {
     animation-name: fadeToLight;
     animation-duration: .5s;
     filter: invert(0%);
 }
 
 .dark-mode {
+    filter: invert(85%);
+}
+
+.dark-mode-anim {
     animation-name: fadeToDark;
     animation-duration: .5s;
-    filter: invert(85%);
 }
 
 @keyframes fadeToDark {
@@ -245,6 +250,21 @@ canvas {
 @keyframes fadeToLight {
     from {filter: invert(85%);}
     to {filter: invert(0%);}
+}
+
+.show-anim {
+    animation-name: opacityFadeShow;
+    animation-duration: .5s;
+}
+
+@keyframes opacityFadeShow {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+@keyframes opacityFadeHide {
+    from { display: flex; opacity: 1;}
+    to { display: none; opacity: 0;}
 }
 
 @media screen and (max-width: 800px) {

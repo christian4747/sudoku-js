@@ -21,6 +21,8 @@ const gridCenters = [
 ];
 // Used to add confetti on game win
 const jsConfetti = new JSConfetti();
+// Symbols used for loading boards
+const symbols = ['!', '@', '#', '$', '%', '^', '&', '*', '('];
 
 // # NON-CONSTANT VARIABLES # //
 
@@ -93,7 +95,7 @@ const fisherYatesShuffle = (arr) => {
  * Returns a position (Array [x, y]) based on the given 1d position and total cells in the grid.
  * Helpful for transforming a flat 1d position (cell 1-81) to a 2d position (cell [x, y]).
  * @param {int} num the cell's position to convert to x and y
- * @param {int} len the total amount of cells in the grid
+ * @param {int} len the number of rows on the grid
  * @returns an Array [x, y] where position num is located on the grid
  */
 const positionConversion = (num, len) => {
@@ -443,9 +445,11 @@ const resumeTimer = () => {
  */
 const hideBoardView = () => {
     for (let cell of document.querySelectorAll('.sudoku-number')) {
+        cell.classList.remove('show-anim');
         cell.classList.add('hide');
     }
     for (let cell of document.querySelectorAll('.note-container')) {
+        cell.classList.remove('show-anim');
         cell.classList.add('hide');
     }
     // document.querySelector('#play-area').classList.add('hide');
@@ -457,9 +461,11 @@ const hideBoardView = () => {
 const showBoardView = () => {
     for (let cell of document.querySelectorAll('.sudoku-number')) {
         cell.classList.remove('hide');
+        cell.classList.add('show-anim');
     }
     for (let cell of document.querySelectorAll('.note-container')) {
         cell.classList.remove('hide');
+        cell.classList.add('show-anim');
     }
     // document.querySelector('#play-area').classList.remove('hide');
 }
@@ -637,7 +643,7 @@ const removeSelectedCellValue = () => {
  * @param {int} y the y position of the cell
  */
 const selectCell = (x, y) => {
-    console.log(selectedCell.x, x, selectedCell.y, y);
+    // console.log(selectedCell.x, x, selectedCell.y, y);
     if (selectedCell.x == x && selectedCell.y == y) {
         highlightUndo();
         setTimeout(() => {
@@ -646,12 +652,12 @@ const selectCell = (x, y) => {
         }, 200);
         return;
     }
-    console.log(selectedCell);
-    console.log('unfocused selected');
+    // console.log(selectedCell);
+    // console.log('unfocused selected');
     selectedCell = sudokuGrid[x][y].parentElement;
     highlightUndo();
-    console.log(selectedCell);
-    console.log('focused selected');
+    // console.log(selectedCell);
+    // console.log('focused selected');
     setTimeout(() => {
         clearHighlights();
         clearSelectedCell();
@@ -768,7 +774,7 @@ const handleKeydown = (e) => {
  * @param {boolean} undo true if the action is an undo, false if the action is a redo
  */
 const handleAction = (command, prev, val, x, y, undo) => {
-    console.log(command, prev, val, x, y, undo);
+    // console.log(command, prev, val, x, y, undo);
     clearHighlights();
     switch (command) {
         case 'remove':
@@ -782,7 +788,6 @@ const handleAction = (command, prev, val, x, y, undo) => {
             if (undo) {
                 setCellValue(prev, x, y);
                 if (prev == '') {
-                    console.log('hello');
                     showCellNotes(x, y);
                 }
             } else {
@@ -790,7 +795,7 @@ const handleAction = (command, prev, val, x, y, undo) => {
             }
             break;
         case 'toggle-note':
-            console.log('hitting notes')
+            // console.log('hitting notes');
             setNote(val, x, y);
             break;
         default:
@@ -912,9 +917,154 @@ const checkWin = () => {
 }
 
 /**
+ * Toggles dark mode.
+ */
+const toggleDarkMode = () => {
+    if (darkMode) {
+        document.body.classList.remove('dark-mode-anim');
+        document.body.classList.remove('dark-mode');
+        document.body.classList.add('light-mode-anim');
+        localStorage.setItem('darkmode', 'false');
+    } else {
+        document.body.classList.add('dark-mode-anim');
+        document.body.classList.add('dark-mode');
+        document.body.classList.remove('light-mode-anim');
+        localStorage.setItem('darkmode', 'true');
+    }
+    darkMode = !darkMode;
+}
+
+/**
+ * Saves the current board to a string in localStorage.
+ */
+const saveBoard = () => {
+    let board1D = '';
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            let cellModifiable = !sudokuGrid[i][j].unmodifiable;
+            let cellVal = sudokuGrid[i][j].textContent;
+            if (cellModifiable) {
+                board1D += numberToSymbol(cellVal);
+            } else {
+                board1D += cellVal;
+            }
+        }
+    }
+    localStorage.setItem('saved-board', board1D);
+}
+
+/**
+ * Loads the given boardString onto the sudoku board.
+ * @param {String} boardString string of numbers containing board information
+ */
+const loadBoard = (boardString) => {
+    if (!boardString) return;
+
+    clearBoard();
+
+    for (let i = 0; i < boardString.length; i++) {
+        let loadedVal = boardString[i];
+        let convertedPos = positionConversion(i, 9);
+
+        if (loadedVal == '0') {
+            sudokuGrid[convertedPos[0]][convertedPos[1]].textContent = '';
+            sudokuGrid[convertedPos[0]][convertedPos[1]].unmodifiable = false;
+            sudokuGrid[convertedPos[0]][convertedPos[1]].classList.add('modifiable');
+        } else if (symbols.includes(loadedVal)) {
+            sudokuGrid[convertedPos[0]][convertedPos[1]].textContent = symbolToNum(loadedVal);
+            sudokuGrid[convertedPos[0]][convertedPos[1]].unmodifiable = false;
+            sudokuGrid[convertedPos[0]][convertedPos[1]].classList.add('modifiable');
+        } else {
+            sudokuGrid[convertedPos[0]][convertedPos[1]].textContent = loadedVal;
+            sudokuGrid[convertedPos[0]][convertedPos[1]].unmodifiable = true;
+        }
+    }
+}
+
+/**
+ * Saves the notes currently on the board.
+ */
+const saveNotes = () => {
+    // TODO: Implement saving notes
+}
+
+/**
+ * Loads the notes onto the board with the given string.
+ * @param {String} notesString 
+ */
+const loadNotes = (notesString) => {
+    // TODO: Implement loading notes
+}
+
+/**
+ * Converts the given number to it's "Shift + Number" equivalent.
+ * @param {String} num 
+ * @returns the given number's "Shift + Number" equivalent
+ */
+const numberToSymbol = (num) => {
+    switch (num) {
+        case '1':
+            return '!';
+        case '2':
+            return '@';
+        case '3':
+            return '#';
+        case '4':
+            return '$';
+        case '5':
+            return '%';
+        case '6':
+            return '^';
+        case '7':
+            return '&';
+        case '8':
+            return '*';
+        case '9':
+            return '(';
+        default:
+            return '0';
+    }
+}
+
+/**
+ * Converts the given "Shift + Number" to it's number equivalent.
+ * @param {String} sym 
+ * @returns the given "Shift + Number"'s number equivalent
+ */
+const symbolToNum = (sym) => {
+    switch (sym) {
+        case '!':
+            return '1';
+        case '@':
+            return '2';
+        case '#':
+            return '3';
+        case '$':
+            return '4';
+        case '%':
+            return '5';
+        case '^':
+            return '6';
+        case '&':
+            return '7';
+        case '*':
+            return '8';
+        case '(':
+            return '9';
+        default:
+            return '0';
+    }
+}
+
+/**
  * Starts the game and hooks up button once the DOM loads.
  */
 document.addEventListener("DOMContentLoaded", () => {
+    if (localStorage.getItem('darkmode') === 'true') {
+        darkMode = true;
+        document.body.classList.add('dark-mode');
+    }
+
     restartTimer();
 
     // Gets all the cells in order of rows
@@ -930,6 +1080,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Change the grid to 2d
     sudokuGrid = flatTo2d(sudokuGrid, 9);
+
+    // Generate a random grid or load the last one
+    initializeGrid(30);
+    const savedBoard = localStorage.getItem('saved-board');
+    loadBoard(savedBoard);
 
     // Detects valid keypresses
     document.addEventListener("keydown", handleKeydown);
@@ -1043,13 +1198,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.querySelector('#dark-mode-button').addEventListener("click", (e) => {
-        if (darkMode) {
-            document.body.classList.remove('dark-mode');
-            document.body.classList.add('light-mode');
-        } else {
-            document.body.classList.add('dark-mode');
-            document.body.classList.remove('light-mode');
-        }
-        darkMode = !darkMode;
+        toggleDarkMode();
     });
+
+    // Autosaving set to 5 seconds
+    setInterval(() => {
+        saveBoard();
+    }, 5000)
 });
