@@ -408,7 +408,9 @@
             </div>
 
             <div id="settings">
-                <div id="timer">0:00</div>
+                <div id="timer-box">
+                    <div id="timer" class="hide">0:00</div>
+                </div>
                 <button id="pause-game-button">Pause</button>
                 <input id="note-toggle-checkbox" name="note-toggle" type="checkbox">
                 <label for="note-toggle-checkbox">Note Mode</label>
@@ -424,6 +426,12 @@
                         <button id="clear-board-button">Clear</button>
                         <button id="new-game-button">New Game!</button>
                         <button id="dark-mode-button">Toggle Dark Mode</button>
+                        <button id="check-conflicts-button">Check Conflicts</button>
+                        <div>
+                            <p class="hide" id="conflict-message"></p>
+                            <p class="hide" id="no-conflict-message">No conflicting cells. Keep it up!</p>
+                        </div>
+                        
                     </div>
                 </div>
             </div>

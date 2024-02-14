@@ -46,6 +46,8 @@ let paused = false;
 let noteMode = false;
 // Whether or not darkMode is enabled
 let darkMode = false;
+// Number of errors currently on the board
+let numberOfErrors = 0;
 
 // # GAME FUNCTIONS & LOGIC # //
 
@@ -153,6 +155,7 @@ const clickCell = (e) => {
     selectedCell = e.parentElement;
     highlightSelection(selectedCell.x, selectedCell.y);
     highlightSameNumbers(selectedCell.x, selectedCell.y);
+    // console.log(selectedCell.x, selectedCell.y);
 }
 
 /**
@@ -177,6 +180,53 @@ const moveInDirection = (key) => {
             clickCell(sudokuGrid[selectedCell.x][selectedCell.y + 1]);
         }
     }
+}
+
+/**
+ * Checks whether a given x and y is a valid sudoku value for the puzzle.
+ * @param {int} x the x position of the cell
+ * @param {int} y the y position of the cell
+ * @returns 
+ */
+const checkCoordinate = (x, y) => {
+    // check if empty: empty = no conflicts, skip unmodifiable cells
+    let val = sudokuGrid[x][y].textContent;
+    if (val == '' || sudokuGrid[x][y].unmodifiable) {
+        return true;
+    }
+    // check horizontally
+    for (let i = 0; i < 9; i++) {
+        // skip if comparing current cell
+        if (i != y) {
+            let check = sudokuGrid[x][i].textContent;
+            if (val == check || check.length > 1) {
+                return false;
+            }
+        }
+    }
+    // check vertically
+    for (let i = 0; i < 9; i++) {
+        let check = sudokuGrid[i][y].textContent;
+        // skip if comparing current cell
+        if (i != x) {
+            if (val == check || check.length > 1) {
+                return false;
+            }
+        }
+    }
+    // check the grid it exists in
+    let centerPoint = closestGrid(x, y);
+    for (let i = centerPoint[0] - 1; i < centerPoint[0] + 2; i++) {
+        for (let j = centerPoint[1] - 1; j < centerPoint[1] + 2; j++) {
+            if (i != x && j != y) {
+                let check = sudokuGrid[i][j].textContent;
+                if (val == check || check.length > 1) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
 }
 
 /**
@@ -361,6 +411,7 @@ const clearBoard = () => {
     clearHighlights();
     clearSelectedCell();
     showBoardView();
+    showTimer();
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             sudokuGrid[i][j].textContent = '';
@@ -439,6 +490,18 @@ const resumeTimer = () => {
     }
 }
 
+const hideTimer = () => {
+    const cell = document.querySelector('#timer');
+    cell.classList.remove('show-anim');
+    cell.classList.add('hide');
+}
+
+const showTimer = () => {
+    const cell = document.querySelector('#timer');
+    cell.classList.remove('hide');
+    cell.classList.add('show-anim');
+}
+
 /**
  * Hides the view of the sudoku board.
  * TODO: Hide cells instead of whole board
@@ -473,11 +536,20 @@ const showBoardView = () => {
 /**
  * Returns the notes currently in a given "sudoku-cell".
  * @param {Element} cell the cell to return the notes for
- * @returns an array containing the notes the cell has
+ * @returns a string containing the notes the cell has
  */
 const getNotes = (cell) => {
-    // TODO: Add implementation
-    return [];
+    let noteContainer = cell.querySelector('.note-container');
+    if (!noteContainer.firstChild) {
+        return ' ,';
+    }
+    let notes = noteContainer.querySelectorAll('div');
+    let notesString = '';
+    for (let note of notes) {
+        let noteNum = note.className.substring(note.className.length - 1);
+        notesString += noteNum;
+    }
+    return notesString + ',';
 }
 
 /**
@@ -502,6 +574,33 @@ const setNote = (key, x, y) => {
         newNoteDiv.classList += className;
         newNoteDiv.textContent = key;
         selectedCell.querySelector('.note-container').append(newNoteDiv);
+    }
+}
+
+/**
+ * Sets a group of notes at the position [x, y].
+ * @param {String} notesString the notes String (e.g. 1234, 239)
+ * @param {int} x the x value of the cell to modify
+ * @param {int} y the y value of the cell to modify
+ */
+const setNotes = (notesString, x, y) => {
+    if (!validPosition(x, y)) {
+        return;
+    }
+    if (notesString == ' ') {
+        return;
+    }
+    let selectedCell = sudokuGrid[x][y].parentElement;
+    for (let i = 0; i < notesString.length; i++) {
+        let key = notesString[i];
+        let className = `note-${key}`;
+        let noteDiv = selectedCell.querySelector(`.${className}`);
+        if (!noteDiv) {
+            const newNoteDiv = document.createElement("div");
+            newNoteDiv.classList += className;
+            newNoteDiv.textContent = key;
+            selectedCell.querySelector('.note-container').append(newNoteDiv);
+        }
     }
 }
 
@@ -669,7 +768,7 @@ const selectCell = (x, y) => {
  */
 const showCurrentCellNotes = () => {
     let noteContainer = selectedCell.querySelector('.note-container');
-    noteContainer.style.display = 'grid';
+    noteContainer.classList.remove('hide');
 }
 
 /**
@@ -679,7 +778,7 @@ const showCurrentCellNotes = () => {
  */
 const showCellNotes = (x, y) => {
     let noteContainer = sudokuGrid[x][y].parentElement.querySelector('.note-container');
-    noteContainer.style.display = 'grid';
+    noteContainer.classList.remove('hide');
 }
 
 /**
@@ -687,7 +786,7 @@ const showCellNotes = (x, y) => {
  */
 const hideCurrentCellNotes = () => {
     let noteContainer = selectedCell.querySelector('.note-container');
-    noteContainer.style.display = 'none';
+    noteContainer.classList.add('hide');
 }
 
 /**
@@ -697,7 +796,7 @@ const hideCurrentCellNotes = () => {
  */
 const hideCellNotes = (x, y) => {
     let noteContainer = sudokuGrid[x][y].parentElement.querySelector('.note-container');
-    noteContainer.style.display = 'none';
+    noteContainer.classList.add('hide');
 }
 
 /**
@@ -913,6 +1012,7 @@ const checkWin = () => {
             let modal = document.querySelector('#game-won-modal');
             modal.style.display = 'block';
         }, 750);
+        pauseTimer();
     }
 }
 
@@ -932,6 +1032,20 @@ const toggleDarkMode = () => {
         localStorage.setItem('darkmode', 'true');
     }
     darkMode = !darkMode;
+}
+
+/**
+ * Loads a previously saved board, timer, and notes.
+ */
+const loadSavedGame = () => {
+    const savedBoard = localStorage.getItem('saved-board');
+    loadBoard(savedBoard);
+
+    loadTime();
+
+    const notesString = localStorage.getItem('saved-notes');
+    loadNotes(notesString);
+
 }
 
 /**
@@ -985,7 +1099,14 @@ const loadBoard = (boardString) => {
  * Saves the notes currently on the board.
  */
 const saveNotes = () => {
-    // TODO: Implement saving notes
+    let notesString = '';
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            let str = getNotes(sudokuGrid[i][j].parentElement);
+            notesString += str;
+        }
+    }
+    localStorage.setItem('saved-notes', notesString);
 }
 
 /**
@@ -993,7 +1114,29 @@ const saveNotes = () => {
  * @param {String} notesString 
  */
 const loadNotes = (notesString) => {
-    // TODO: Implement loading notes
+    notesString = notesString.split(',');
+    for (let i = 0; i < 81; i++) {
+        let convertedPos = positionConversion(i, 9);
+        setNotes(notesString[i], convertedPos[0], convertedPos[1]);
+    }
+}
+
+/**
+ * Saves the current timer's current time.
+ */
+const saveTime = () => {
+    localStorage.setItem('saved-time', secondsPassed);
+}
+
+/**
+ * Loads a saved game's timer.
+ */
+const loadTime = () => {
+    const time = localStorage.getItem('saved-time');
+    if (time) {
+        secondsPassed = time;
+        document.querySelector('#timer').textContent = secondsToTimeString(secondsPassed);
+    }
 }
 
 /**
@@ -1057,11 +1200,59 @@ const symbolToNum = (sym) => {
 }
 
 /**
+ * Checks whether or not an conflict exists on the board.
+ */
+const doesConflictExist = () => {
+    numberOfErrors = 0;
+    for (let x = 0; x < 9; x++) {
+        for (let y = 0; y < 9; y++) {
+            if (!sudokuGrid[x][y].unmodifiable) {
+                if (!checkCoordinate(x, y)) {
+                    // console.log(`${x}, ${y}, ${sudokuGrid[x][y].textContent}`);
+                    numberOfErrors++;
+                }
+            }
+        }
+    }
+    return numberOfErrors > 0 ? true: false;
+}
+
+/**
+ * TODO: Check for errors function
+ * Idea: Check for modifiable cell conflicts
+ */
+const showErrorCheckMessage = () => {
+    let conflictMsg = document.querySelector('#conflict-message');
+    let noConflictMsg = document.querySelector('#no-conflict-message');
+    if (doesConflictExist()) {
+        conflictMsg.textContent = errorNumberToString();
+        conflictMsg.classList.remove('hide');
+        noConflictMsg.classList.add('hide');
+    } else {
+        conflictMsg.classList.add('hide');
+        noConflictMsg.classList.remove('hide');
+    }
+}
+
+/**
+ * 
+ * @returns 
+ */
+const errorNumberToString = () => {
+    switch (numberOfErrors) {
+        case 1:
+            return '1 conflict exists on the board.';
+        default:
+            return `${numberOfErrors} conflicts exist on the board.`;
+    }
+}
+
+/**
  * Starts the game and hooks up button once the DOM loads.
  */
 document.addEventListener("DOMContentLoaded", () => {
     if (localStorage.getItem('darkmode') === 'true') {
-        darkMode = true;
+        toggleDarkMode();
         document.body.classList.add('dark-mode');
     }
 
@@ -1083,8 +1274,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Generate a random grid or load the last one
     initializeGrid(30);
-    const savedBoard = localStorage.getItem('saved-board');
-    loadBoard(savedBoard);
+    loadSavedGame();
 
     // Detects valid keypresses
     document.addEventListener("keydown", handleKeydown);
@@ -1199,10 +1389,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelector('#dark-mode-button').addEventListener("click", (e) => {
         toggleDarkMode();
+        
     });
+
+    document.querySelector('#check-conflicts-button').addEventListener("click", (e) => {
+        showErrorCheckMessage();
+    });
+
+    checkWin();
 
     // Autosaving set to 5 seconds
     setInterval(() => {
         saveBoard();
-    }, 5000)
+        saveTime();
+        saveNotes();
+    }, 5000);
 });
