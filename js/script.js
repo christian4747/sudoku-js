@@ -1,5 +1,11 @@
 /**
- * Important things to note about the structure of this project:
+ * !!IMPORTANT!!
+ * As opposed to traditional x and y, refer to x as the row and y as the column number.
+ * The board's top left is the origin 0, 0.
+ * The x coordinate goes up as the row gets lower (bottom left is 8, 0).
+ * The y coordinate goes up as the column gets higher (top right is 0, 8). 
+ *
+ * Other notes about the structure of this project:
  * The grid itself is composed of 9 rows or "sudoku-cells".
  * Each "sudoku-cell" contains a "sudoku-number" which stores the number value and shows it to the user.
  * Each "sudoku-cell" also contains a "note-container".
@@ -53,7 +59,7 @@ let numberOfErrors = 0;
 
 /**
  * Initializes a brand new sudoku grid.
- * @param {int} hintNum the number of hints included in the new board
+ * @param {int} hintNum the number of hints to include in the new board
  */
 const initializeGrid = (hintNum) => {
     clearBoard();
@@ -82,6 +88,7 @@ const initializeGrid = (hintNum) => {
 
 /**
  * Performs the Fisher-Yates shuffle algorithm on an array.
+ * Mutates the given array.
  * @param {Array} arr the array to be shuffled
  */
 const fisherYatesShuffle = (arr) => {
@@ -133,17 +140,6 @@ const flatTo2d = (arr, len) => {
 }
 
 /**
- * Handles what should happen when a sudoku cell is directly clicked.
- * @param {Event} e the Event from clicking
- */
-const clickCellEvent = (e) => {
-    if (paused) {
-        return;
-    }
-    clickCell(e.target);
-}
-
-/**
  * Highlights the sudoku cell that is clicked or navigated to with arrow keys.
  * @param {Element} e the sudoku cell element to highlight
  */
@@ -157,6 +153,18 @@ const clickCell = (e) => {
     highlightSameNumbers(selectedCell.x, selectedCell.y);
     // console.log(selectedCell.x, selectedCell.y);
 }
+
+/**
+ * Handles what should happen when a sudoku cell is directly clicked.
+ * @param {Event} e the Event from clicking
+ */
+const clickCellEvent = (e) => {
+    if (paused) {
+        return;
+    }
+    clickCell(e.target);
+}
+
 
 /**
  * Handles movement around the grid with arrow keys.
@@ -183,10 +191,10 @@ const moveInDirection = (key) => {
 }
 
 /**
- * Checks whether a given x and y is a valid sudoku value for the puzzle.
+ * Checks whether a given x and y is a valid sudoku value for the current number arrangement.
  * @param {int} x the x position of the cell
  * @param {int} y the y position of the cell
- * @returns 
+ * @returns true if number is valid, false otherwise
  */
 const checkCoordinate = (x, y) => {
     // check if empty: empty = no conflicts, skip unmodifiable cells
@@ -271,7 +279,7 @@ const checkCol = (y) => {
  * Checks whether the 3x3 grid closest to the x and y position is valid according to sudoku rules.
  * @param {int} x the x position of the position to check
  * @param {int} y the y position of the position to check
- * @returns 
+ * @returns true if the grid is valid, false otherwise
  */
 const checkGrid = (x, y) => {
     let centerPoint = closestGrid(x, y);
@@ -400,6 +408,7 @@ const backTrackMe = (grid) => {
 
 /**
  * Clears the sudoku game board, resetting everything a clean board.
+ * Restarts the game's timer and clear the notes on the board.
  */
 const clearBoard = () => {
     previousActions = [];
@@ -490,12 +499,18 @@ const resumeTimer = () => {
     }
 }
 
+/**
+ * Hides the game's timer.
+ */
 const hideTimer = () => {
     const cell = document.querySelector('#timer');
     cell.classList.remove('show-anim');
     cell.classList.add('hide');
 }
 
+/**
+ * Shows the game's timer.
+ */
 const showTimer = () => {
     const cell = document.querySelector('#timer');
     cell.classList.remove('hide');
@@ -504,7 +519,6 @@ const showTimer = () => {
 
 /**
  * Hides the view of the sudoku board.
- * TODO: Hide cells instead of whole board
  */
 const hideBoardView = () => {
     for (let cell of document.querySelectorAll('.sudoku-number')) {
@@ -535,6 +549,7 @@ const showBoardView = () => {
 
 /**
  * Returns the notes currently in a given "sudoku-cell".
+ * If there are no notes, return a single whitespace + comma.
  * @param {Element} cell the cell to return the notes for
  * @returns a string containing the notes the cell has
  */
@@ -1201,6 +1216,7 @@ const symbolToNum = (sym) => {
 
 /**
  * Checks whether or not an conflict exists on the board.
+ * @returns true if conflict exists, false otherwise
  */
 const doesConflictExist = () => {
     numberOfErrors = 0;
@@ -1218,8 +1234,7 @@ const doesConflictExist = () => {
 }
 
 /**
- * TODO: Check for errors function
- * Idea: Check for modifiable cell conflicts
+ * Shows the error message when clicking the "Check for Conflicts" button.
  */
 const showErrorCheckMessage = () => {
     let conflictMsg = document.querySelector('#conflict-message');
@@ -1235,15 +1250,16 @@ const showErrorCheckMessage = () => {
 }
 
 /**
- * 
- * @returns 
+ * Returns a string with conflict details for the given amount of errors.
+ * @param {String} errors the amount of errors
+ * @returns a string with conflict details for the given amount of errors
  */
-const errorNumberToString = () => {
-    switch (numberOfErrors) {
+const errorNumberToString = (errors) => {
+    switch (errors) {
         case 1:
             return '1 conflict exists on the board.';
         default:
-            return `${numberOfErrors} conflicts exist on the board.`;
+            return `${errors} conflicts exist on the board.`;
     }
 }
 
@@ -1396,6 +1412,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showErrorCheckMessage();
     });
 
+    // Check whether the loaded board was in a winning position
     checkWin();
 
     // Autosaving set to 5 seconds
