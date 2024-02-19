@@ -149,9 +149,9 @@ const clickCell = (e) => {
         highlightSameNumbers(selectedCell.x, selectedCell.y);
     }
     selectedCell = e.parentElement;
+    // console.log(selectedCell.x, selectedCell.y);
     highlightSelection(selectedCell.x, selectedCell.y);
     highlightSameNumbers(selectedCell.x, selectedCell.y);
-    // console.log(selectedCell.x, selectedCell.y);
 }
 
 /**
@@ -561,10 +561,126 @@ const getNotes = (cell) => {
     let notes = noteContainer.querySelectorAll('div');
     let notesString = '';
     for (let note of notes) {
-        let noteNum = note.className.substring(note.className.length - 1);
+        let noteNum = note.classList[0].substring(note.classList[0].length - 1);
         notesString += noteNum;
     }
     return notesString + ',';
+}
+
+/**
+ * Returns a map of positions and their notes on passed row # in format:
+ *   [key: 'x,y' board location string, val: comma-separated string of notes]
+ * @param {int} x row number
+ * @returns map of positions and their notes on passed row #
+ */
+const getNotesRow = (x) => {
+    let notes = new Map();
+    for (let i = 0; i < 9; i++) {
+        let cell = sudokuGrid[x][i];
+        let note = getNotes(cell.parentElement);
+        notes.set(`${x},${i}`, note);
+        // console.log(`row: ${note}`);
+    }
+    return notes;
+}
+
+/**
+ * Returns a map of positions and their notes on passed column # in format:
+ *   [key: 'x,y' board location string, val: comma-separated string of notes]
+ * @param {int} y column number
+ * @returns map of positions and their notes on passed column #
+ */
+const getNotesColumn = (y) => {
+    let notes = new Map();
+    for (let i = 0; i < 9; i++) {
+        let cell = sudokuGrid[i][y];
+        let note = getNotes(cell.parentElement);
+        notes.set(`${i},${y}`, note);
+        // console.log(`column: ${note}`);
+    }
+    return notes;
+}
+
+/**
+ * Returns a map of positions and their notes on passed row and column # in format:
+ *   [key: 'x,y' board location string, val: comma-separated string of notes]
+ * @param {int} x row number of position
+ * @param {int} y column number of position
+ * @returns map of positions and their notes on passed x and y #
+ */
+const getNotesGrid = (x, y) => {
+    let centerPoint = closestGrid(x, y);
+    let notes = new Map();
+    for (let i = centerPoint[0] - 1; i < centerPoint[0] + 2; i++) {
+        for (let j = centerPoint[1] - 1; j < centerPoint[1] + 2; j++) {
+            if (i != x && j != y) {
+                let cell = sudokuGrid[i][j];
+                let note = getNotes(cell.parentElement);
+                notes.set(`${i},${j}`, note);
+                // console.log(`grid: ${note}`);
+            }
+        }
+    }
+    return notes;
+}
+
+/**
+ * Deletes notes that intersect with the given position that have the same value.
+ * @param {int} val value to look for and delete
+ * @param {int} x row number of position
+ * @param {int} y column number of position
+ */
+const deleteIntersections = (val, x, y) => {
+    let notesMap = getNotesRow(x);
+    notesMap.forEach((value, key, map) => {
+        value.substring(0, value.length - 1);
+        if (value != ' ') {
+            let notes = value.split('');
+            for (let noteVal of notes) {
+                let className = `note-${val}`;
+                let noteDiv = sudokuGrid[key[0]][key[2]].parentElement.querySelector(`.${className}`);
+                if (noteDiv && noteVal == val) {
+                    noteDiv.remove();
+                }
+                notesMap.delete(key);
+            }
+        }
+    });
+    
+    notesMap = getNotesColumn(y);
+
+    notesMap.forEach((value, key, map) => {
+        console.log(key, value)
+        value.substring(0, value.length - 1);
+        if (value != ' ') {
+            let notes = value.split('');
+            for (let noteVal of notes) {
+                let className = `note-${val}`;
+                let noteDiv = sudokuGrid[key[0]][key[2]].parentElement.querySelector(`.${className}`);
+                if (noteDiv && noteVal == val) {
+                    noteDiv.remove();
+                }
+                notesMap.delete(key);
+            }
+        }
+    });
+
+    notesMap = getNotesGrid(x, y);
+
+    notesMap.forEach((value, key, map) => {
+        value.substring(0, value.length - 1);
+        if (value != ' ') {
+            let notes = value.split('');
+            for (let noteVal of notes) {
+                let className = `note-${val}`;
+                let noteDiv = sudokuGrid[key[0]][key[2]].parentElement.querySelector(`.${className}`);
+                if (noteDiv && noteVal == val) {
+                    noteDiv.remove();
+                }
+                notesMap.delete(key);
+            }
+        }
+    });
 }
 
 /**
@@ -837,7 +953,6 @@ const highlightUndo = () => {
     sudokuGrid[selectedCell.x][selectedCell.y].parentElement.classList.toggle('selected-cell-undo');
 }
 
-// TODO: call a note removal when entering a number that intersects with a note, allow for undos
 /**
  * Handles how the game should react to keypresses.
  * @param {Event} e the event caused by pressing a button
@@ -859,13 +974,13 @@ const handleKeydown = (e) => {
         if (selectedCell.length == 0) {
             return;
         }
-
         if (e.key == 'Backspace' && canSelectedBeModified() && getSelectedCellValue() != '') {
             previousActions.push(['remove', getSelectedCellValue(), null, selectedCell.x, selectedCell.y]);
             removeSelectedCellValue();
         } else if (e.key != 'Backspace' && canSelectedBeModified()) {
             previousActions.push(['set', getSelectedCellValue(), e.key, selectedCell.x, selectedCell.y]);
             setSelectedCellValue(e.key);
+            deleteIntersections(e.key, selectedCell.x, selectedCell.y);
         }
     } else if (movementKeys.includes(e.key)) {
         if (selectedCell.length == 0) {
@@ -1129,6 +1244,7 @@ const saveNotes = () => {
  * @param {String} notesString 
  */
 const loadNotes = (notesString) => {
+    if (!notesString) { return; }
     notesString = notesString.split(',');
     for (let i = 0; i < 81; i++) {
         let convertedPos = positionConversion(i, 9);
