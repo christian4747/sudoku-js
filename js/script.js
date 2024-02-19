@@ -54,6 +54,8 @@ let noteMode = false;
 let darkMode = false;
 // Number of errors currently on the board
 let numberOfErrors = 0;
+// Whether the game has been won
+let gameWon = false;
 
 // # GAME FUNCTIONS & LOGIC # //
 
@@ -159,7 +161,7 @@ const clickCell = (e) => {
  * @param {Event} e the Event from clicking
  */
 const clickCellEvent = (e) => {
-    if (paused) {
+    if (paused && !gameWon) {
         return;
     }
     clickCell(e.target);
@@ -411,6 +413,7 @@ const backTrackMe = (grid) => {
  * Restarts the game's timer and clear the notes on the board.
  */
 const clearBoard = () => {
+    gameWon = false;
     previousActions = [];
     redoActions = [];
     clearInterval(timerInterval);
@@ -958,7 +961,7 @@ const highlightUndo = () => {
  * @param {Event} e the event caused by pressing a button
  */
 const handleKeydown = (e) => {
-    if (paused) {
+    if (paused && !gameWon) {
         return;
     }
 
@@ -1143,6 +1146,7 @@ const checkWin = () => {
             modal.style.display = 'block';
         }, 750);
         pauseTimer();
+        gameWon = true;
     }
 }
 
