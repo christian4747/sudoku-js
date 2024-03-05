@@ -653,7 +653,6 @@ const deleteIntersections = (val, x, y) => {
     notesMap = getNotesColumn(y);
 
     notesMap.forEach((value, key, map) => {
-        console.log(key, value)
         value.substring(0, value.length - 1);
         if (value != ' ') {
             let notes = value.split('');
@@ -961,7 +960,7 @@ const highlightUndo = () => {
  * @param {Event} e the event caused by pressing a button
  */
 const handleKeydown = (e) => {
-    if (paused && !gameWon) {
+    if (paused) {
         return;
     }
 
@@ -1360,13 +1359,18 @@ const showErrorCheckMessage = () => {
     let conflictMsg = document.querySelector('#conflict-message');
     let noConflictMsg = document.querySelector('#no-conflict-message');
     if (doesConflictExist()) {
-        conflictMsg.textContent = errorNumberToString();
+        conflictMsg.textContent = errorNumberToString(numberOfErrors);
         conflictMsg.classList.remove('hide');
         noConflictMsg.classList.add('hide');
     } else {
         conflictMsg.classList.add('hide');
         noConflictMsg.classList.remove('hide');
     }
+
+    setInterval(() => {
+        conflictMsg.classList.add('hide');
+        noConflictMsg.classList.add('hide');
+    }, 7500);
 }
 
 /**
@@ -1377,9 +1381,9 @@ const showErrorCheckMessage = () => {
 const errorNumberToString = (errors) => {
     switch (errors) {
         case 1:
-            return '1 conflict exists on the board.';
+            return '1 conflict exists.';
         default:
-            return `${errors} conflicts exist on the board.`;
+            return `${errors} conflicts exist.`;
     }
 }
 
@@ -1457,9 +1461,9 @@ document.addEventListener("DOMContentLoaded", () => {
         checkWin();
     });
 
-    document.querySelector('#clear-board-button').addEventListener("click", (e) => {
-        clearBoard();
-    });
+    // document.querySelector('#clear-board-button').addEventListener("click", (e) => {
+    //     clearBoard();
+    // });
 
     document.querySelector('#new-game-button').addEventListener("click", (e) => {
         let modal = document.querySelector('#new-game-modal');
@@ -1486,6 +1490,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.querySelector('#pause-game-button').addEventListener("click", (e) => {
+        if (gameWon) { return; }
         if (!paused) {
             pauseTimer();
             hideBoardView();
