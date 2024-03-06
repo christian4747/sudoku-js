@@ -41,6 +41,7 @@
       </ul>
     </li>
     <li><a href="#license">License</a></li>
+    <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
@@ -81,6 +82,16 @@ Features:
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+<!-- CONTACT -->
+## Contact
+
+Christian Andersen - christian.andersen4747@gmail.com
+
+Project Link: [https://github.com/christian4747/sudoku-js](https://github.com/christian4747/sudoku-js)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
