@@ -109,7 +109,7 @@ Project Link: [https://github.com/christian4747/sudoku-js](https://github.com/ch
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[license-shield]: https://img.shields.io/github/license/christian4747/sudoku-js.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/christian4747/sudoku-js?label=license&style=for-the-badge
 [license-url]: https://github.com/christian4747/sudoku-js/blob/master/LICENSE
 [product-screenshot]: images/screenshot.png
 [HTML5]: https://img.shields.io/badge/-HTML5-000000?style=for-the-badge&logo=html5&logoColor=white&color=%23E34F26
