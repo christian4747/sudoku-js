@@ -50,7 +50,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]]
+![Product Name Screen Shot][product-screenshot]
 
 An implementation of the game Sudoku written in HTML, CSS, and JavaScript. Pretty much finished, but if I feel like it there may be updates.
 
