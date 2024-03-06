@@ -17,7 +17,7 @@
     <a href="https://github.com/christian4747/sudoku-js"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/christian4747/sudoku-js">View Demo</a>
+    <a href="https://christian4747.github.io/sudoku-js/">View Demo</a>
     ·
     <a href="https://github.com/christian4747/sudoku-js/issues">Report Bug</a>
     ·
