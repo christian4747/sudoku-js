@@ -532,7 +532,6 @@ const hideBoardView = () => {
         cell.classList.remove('show-anim');
         cell.classList.add('hide');
     }
-    // document.querySelector('#play-area').classList.add('hide');
 }
 
 /**
@@ -547,7 +546,6 @@ const showBoardView = () => {
         cell.classList.remove('hide');
         cell.classList.add('show-anim');
     }
-    // document.querySelector('#play-area').classList.remove('hide');
 }
 
 /**
@@ -836,7 +834,6 @@ const setSelectedCellValue = (val) => {
     let sudokuNumberCell = selectedCell.querySelector('.sudoku-number');
     sudokuNumberCell.textContent = val;
     
-
     hideCurrentCellNotes();
     highlightSameNumbers(selectedCell.x, selectedCell.y);
     checkWin();
@@ -1063,10 +1060,9 @@ const redoAction = () => {
 // TODO: Rewrite highlights to be more intuitive/less hardcoded
 // e.g. use getCells
 /**
- * Highlights the "sudoku-cell" at the position [x, y].
+ * Highlights the affected "sudoku-cells" at the position [x, y].
  * @param {int} x the position x of a cell
  * @param {int} y the position y of a cell
- * @returns 
  */
 const highlightSelection = (x, y) => {
     if (!validPosition(x, y)) {
@@ -1074,17 +1070,19 @@ const highlightSelection = (x, y) => {
     }
     const highlightAreas = new Set();
     for (let i = 0; i < 9; i++) {
+        // Highlight the row [x, y] is in
         if (!highlightAreas.has(`${x} ${i}`)) {
             highlightAreas.add(`${x} ${i}`);
             sudokuGrid[x][i].parentElement.classList.toggle('selected-cell');
         }
-
+        // Highlight the column [x, y] is in
         if (!highlightAreas.has(`${i} ${y}`)) {
             highlightAreas.add(`${i} ${y}`);
             sudokuGrid[i][y].parentElement.classList.toggle('selected-cell');
         }
     }
 
+    // Highlight the rest of the current grid [x, y] is in
     let centerPoint = closestGrid(x, y);
     for (let i = centerPoint[0] - 1; i < centerPoint[0] + 2; i++) {
         for (let j = centerPoint[1] - 1; j < centerPoint[1] + 2; j++) {
@@ -1178,7 +1176,6 @@ const loadSavedGame = () => {
 
     const notesString = localStorage.getItem('saved-notes');
     loadNotes(notesString);
-
 }
 
 /**
@@ -1419,36 +1416,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Detects valid keypresses
     document.addEventListener("keydown", handleKeydown);
 
-    // Debug buttons
-    // document.querySelector('#check-row-button').addEventListener("click", (e) => {
-    //     if (selectedCell.length == 0) {
-    //         return;
-    //     }
-    //     console.log(checkRow(selectedCell.x));
-    // });
-
-    // document.querySelector('#check-column-button').addEventListener("click", (e) => {
-    //     if (selectedCell.length == 0) {
-    //         return;
-    //     }
-    //     console.log(checkCol(selectedCell.y));
-    // });
-
-    // document.querySelector('#check-grid-button').addEventListener("click", (e) => {
-    //     if (selectedCell.length == 0) {
-    //         return;
-    //     }
-    //     console.log(checkGrid(selectedCell.x, selectedCell.y));
-    // });
-
-    // document.querySelector('#check-game-button').addEventListener("click", (e) => {
-    //     console.log(checkGame());
-    // });
-
-    // document.querySelector('#check-solution-button').addEventListener("click", (e) => {
-    //     console.log(checkSolution());
-    // });
-
     document.querySelector('#solve-for-me-button').addEventListener("click", (e) => {
         if (paused) return;
         let start = Date.now();
@@ -1460,10 +1427,6 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log(`Solved in ${(end - start) / 1000}s.`);
         checkWin();
     });
-
-    // document.querySelector('#clear-board-button').addEventListener("click", (e) => {
-    //     clearBoard();
-    // });
 
     document.querySelector('#new-game-button').addEventListener("click", (e) => {
         let modal = document.querySelector('#new-game-modal');
@@ -1545,5 +1508,5 @@ document.addEventListener("DOMContentLoaded", () => {
         saveBoard();
         saveTime();
         saveNotes();
-    }, 5000);
+    }, 15000);
 });

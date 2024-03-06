@@ -389,7 +389,6 @@ canvas {
     }
 
     .keypad-key {
-        border: 2px solid blue;
         width: 9%;
         height: 50px;
         font-size: 1em;
